@@ -1,5 +1,6 @@
 using dotenv.net;
 using Scalar.AspNetCore;
+using Searc.SearchApi.Services;
 
 // Load environment variables from .env file in development
 // Docker Compose will provide environment variables in production
@@ -16,11 +17,17 @@ var builder = WebApplication.CreateBuilder(args);
 // Add environment variables to configuration
 builder.Configuration.AddEnvironmentVariables();
 
-// Add services to the container.
 
+
+// Add services to the container.
+builder.Services.AddSingleton<ISearchService, SearchService>();
+// Add controllers to the container.
 builder.Services.AddControllers();
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
+
+
+
 
 var app = builder.Build();
 
