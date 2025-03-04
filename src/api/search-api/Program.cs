@@ -1,15 +1,15 @@
 using dotenv.net;
 using Scalar.AspNetCore;
-using System.IO;
 
 // Load environment variables from .env file in development
 // Docker Compose will provide environment variables in production
 DotEnv.Load(options: new DotEnvOptions(
     probeForEnv: true,
-    probeLevelsToSearch: 5,
-    envFilePaths: ["../../../.env", ".env"]
+    probeLevelsToSearch: 7,
+    envFilePaths: [".env"]
 ));
 
+Console.WriteLine($"App Port: {Environment.GetEnvironmentVariable("APP_PORT")}");
 
 var builder = WebApplication.CreateBuilder(args);
 
