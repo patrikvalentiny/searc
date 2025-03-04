@@ -3,5 +3,5 @@ using Searc.SearchApi.Models;
 namespace Searc.SearchApi.Services;
 public interface ISearchService
 {
-    IEnumerable<FileDetailsDTO> SearchFiles(string query);
+    Task<IEnumerable<FileDetailsDTO>> SearchFilesAsync(string query);
 }

@@ -1,16 +1,13 @@
+using System.Threading.Tasks;
 using Searc.SearchApi.Models;
+using Searc.SearchApi.Repositories;
 
 namespace Searc.SearchApi.Services;
 
-public class SearchService : ISearchService
+public class SearchService(ISearchRepository repository) : ISearchService
 {
-    public IEnumerable<FileDetailsDTO> SearchFiles(string query)
+    public  async Task<IEnumerable<FileDetailsDTO>> SearchFilesAsync(string query)
     {
-        return new List<FileDetailsDTO>
-        {
-            new() { Filename = $"{query}.txt" },
-            new() { Filename = $"file1{query}.txt" },
-            new() { Filename = $"file2{query}.txt" }
-        };
+        return await repository.SearchAsync(query);
     }
 }

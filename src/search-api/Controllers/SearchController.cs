@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Searc.SearchApi.Models;
 using Searc.SearchApi.Services;
@@ -11,7 +12,7 @@ public class SearchController(ISearchService service) : Controller
 {
 
     [HttpGet]
-    public ActionResult<IEnumerable<FileDetailsDTO>> Search([Required] string query)
+    public async Task<ActionResult<IEnumerable<FileDetailsDTO>>> Search([Required] string query)
     {
         if (string.IsNullOrWhiteSpace(query))
         {
@@ -20,7 +21,7 @@ public class SearchController(ISearchService service) : Controller
 
         try
         {
-            var result = service.SearchFiles(query);
+            var result = await service.SearchFilesAsync(query);
             return Ok(result);
         }
         catch (Exception ex)
