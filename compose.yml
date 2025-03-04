@@ -56,6 +56,16 @@ services:
       - user-management-network
     restart: unless-stopped
 
+  structurizr-lite:
+    image: structurizr/lite
+    container_name: structurizr-lite
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./structurizr:/usr/local/structurizr
+    networks:
+      - user-management-network
+    restart: unless-stopped
 
 networks:
   user-management-network:
