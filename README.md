@@ -1,4 +1,4 @@
-# SEARC - Enron Email Dataset Search Engine
+# searc - Enron Email Dataset Search Engine
 A distributed system for cleaning, indexing, and searching the Enron email dataset.
 
 ## Introduction
