@@ -1,7 +1,8 @@
 services:
-  bizcord-postgres:
+  searc-postgres:
     image: postgres:latest
-    container_name: user-management-db
+    container_name: searc-db
+    hostname: searc-db
     environment:
       POSTGRES_USER: ${DB_USER}
       POSTGRES_PASSWORD: ${DB_PASSWORD}
@@ -11,13 +12,13 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
     networks:
-      - user-management-network
+      - searc-network
     restart: unless-stopped
 
-  bizcord-rabbitmq:
+  searc-rabbitmq:
     image: rabbitmq:3-management
-    container_name: "bizcord-rabbitmq"
-    hostname: "bizcord-rabbitmq"
+    container_name: "searc-rabbitmq"
+    hostname: "searc-rabbitmq"
     ports:
       - "${RABBITMQ_PORT}:5672"
       - "15672:15672"
@@ -25,35 +26,37 @@ services:
       RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER}
       RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASS}
     networks:
-      - user-management-network
+      - searc-network
     healthcheck:
       test: rabbitmq-diagnostics -q ping
       interval: 10s
       timeout: 10s
       retries: 5
       start_period: 40s
-  bizcord-user-management-microservice:
+  searc:
     build:
-      context: ../../
-      dockerfile: apps/user-management-microservice/Dockerfile
+      context: .
+      dockerfile: Dockerfile
     depends_on:
-      bizcord-rabbitmq:
+      searc-rabbitmq:
+        condition: service_healthy
+      searc-postgres:
         condition: service_healthy
     ports:
       - "${APP_PORT}:8080"
     environment:
       APP_PORT: ${APP_PORT}
-      RABBITMQ_HOST: bizcord-rabbitmq
+      RABBITMQ_HOST: searc-rabbitmq
       RABBITMQ_PORT: ${RABBITMQ_PORT}
       RABBITMQ_USER: ${RABBITMQ_USER}
       RABBITMQ_PASS: ${RABBITMQ_PASS}
-      DB_HOST: postgres
+      DB_HOST: searc-db
       DB_PORT: ${DB_PORT}
       DB_NAME: ${DB_NAME}
       DB_USER: ${DB_USER}
       DB_PASSWORD: ${DB_PASSWORD}
     networks:
-      - user-management-network
+      - searc-network
     restart: unless-stopped
 
   structurizr-lite:
@@ -64,11 +67,26 @@ services:
     volumes:
       - ./structurizr:/usr/local/structurizr
     networks:
-      - user-management-network
+      - searc-network
     restart: unless-stopped
+  
+  seq:
+    image: datalust/seq
+    container_name: seq
+    ports:
+      - "5341:80"
+    environment:
+      - ACCEPT_EULA=Y
+
+  zipkin:
+    image: openzipkin/zipkin
+    container_name: zipkin
+    ports:
+      - "9411:9411"
+    restart: always
 
 networks:
-  user-management-network:
+  searc-network:
     driver: bridge
 
 volumes:
