@@ -7,6 +7,14 @@ namespace Searc.SearchApi.Repositories;
 
 public class SearchRepository(DbDataSource dataSource) : ISearchRepository
 {
+    public Task<FileDetailsDTO> AddAsync(FileContent msg)
+    {
+        var sql = @$"INSERT INTO files (name, content) VALUES (@Filename, @Content) 
+        RETURNING id as {nameof(FileDetailsDTO.Id)}, name as {nameof(FileDetailsDTO.Filename)}";
+        using var conn = dataSource.OpenConnection();
+        return conn.QuerySingleAsync<FileDetailsDTO>(sql, msg);
+    }
+
     public async Task<IEnumerable<FileDetailsDTO>> SearchAsync(string query)
     {
         var sql = @$"SELECT f.name as {nameof(FileDetailsDTO.Filename)} FROM words w
