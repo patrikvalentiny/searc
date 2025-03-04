@@ -85,6 +85,24 @@ services:
       - "9411:9411"
     restart: always
 
+  flyway:
+    image: flyway/flyway:latest
+    command: >
+      migrate
+    volumes:
+      - ./sql:/flyway/sql
+    environment:
+      FLYWAY_URL: jdbc:postgresql://searc-db:${DB_PORT}/${DB_NAME}
+      FLYWAY_USER: ${DB_USER}
+      FLYWAY_PASSWORD: ${DB_PASSWORD}
+      FLYWAY_SCHEMAS: public
+      FLYWAY_CONNECT_RETRIES: 50
+    depends_on:
+      searc-postgres:
+        condition: service_healthy
+    networks:
+      - searc-network
+
 networks:
   searc-network:
     driver: bridge
