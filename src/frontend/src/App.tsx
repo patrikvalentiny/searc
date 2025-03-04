@@ -3,9 +3,8 @@ import './App.css'
 
 interface EmailResult {
   id: number;
-  content: string;
   filename: string;
-  timestamp: string;
+  content: string;
 }
 
 function App() {
@@ -15,13 +14,29 @@ function App() {
 
   const handleSearch = async () => {
     setLoading(true)
-    // TODO: Implement actual API call
-    await new Promise(resolve => setTimeout(resolve, 1000))
-    setResults([
-      { id: 1, content: "Sample email content...", filename: "email1.txt", timestamp: "2001-05-10" },
-      { id: 2, content: "Another email content...", filename: "email2.txt", timestamp: "2001-05-11" }
-    ])
-    setLoading(false)
+    try {
+      // Simulating API response with mock data
+      const data = [
+        {
+          id: 1,
+          filename: "email_001.txt",
+          content: "This is a sample email content discussing business matters."
+        },
+        {
+          id: 2,
+          filename: "email_002.txt",
+          content: "Meeting scheduled for next week. Please prepare the reports."
+        }
+      ];
+      // Simulate network delay
+      await new Promise(resolve => setTimeout(resolve, 500));
+      setResults(data)
+    } catch (error) {
+      console.error('Search failed:', error)
+      // You might want to add error state handling here
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
@@ -34,14 +49,14 @@ function App() {
 
       <div className="form-control w-full max-w-2xl mx-auto mb-8">
         <div className="input-group">
-          <input 
+          <input
             type="text"
             placeholder="Search emails..."
             className="input input-bordered w-full"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
-          <button 
+          <button
             className={`btn btn-primary ${loading ? 'loading' : ''}`}
             onClick={handleSearch}
           >
@@ -55,9 +70,21 @@ function App() {
           <div key={result.id} className="card bg-base-100 shadow-xl">
             <div className="card-body">
               <h2 className="card-title">File: {result.filename}</h2>
-              <p className="text-sm text-gray-500">Date: {result.timestamp}</p>
               <p className="mt-2">{result.content}</p>
               <div className="card-actions justify-end">
-                <button className="btn btn-primary">Download</button>
+                {/* <button
+                  className="btn btn-primary"
+                  onClick={() => window.open(`http://localhost:3000/api/download/${result.id}`, '_blank')}
+                >
+                  Download
+                </button> */}
               </div>
-              <
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+export default App
