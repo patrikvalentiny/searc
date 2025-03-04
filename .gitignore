@@ -403,3 +403,7 @@ FodyWeavers.xsd
 
 .structurizr/
 local/
+
+# Environment variables
+.env.local
+.env.*.local

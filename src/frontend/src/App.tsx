@@ -2,34 +2,19 @@ import { useState } from 'react'
 import './App.css'
 import { SearchBar } from './components/SearchBar'
 import { FileCard } from './components/FileCard'
-
-interface EmailResult {
-  id: number;
-  filename: string;
-  content: string;
-}
+import { GetSearchRequest } from './services/SearchService'
+import { FileDetailsDTO } from './models/FileDetailsDTO'
 
 function App() {
   const [searchTerm, setSearchTerm] = useState('')
-  const [results, setResults] = useState<EmailResult[]>([])
+  const [results, setResults] = useState<FileDetailsDTO[]>([])
   const [loading, setLoading] = useState(false)
 
   const handleSearch = async () => {
     setLoading(true)
     try {
       // Simulating API response with mock data
-      const data = [
-        {
-          id: 1,
-          filename: "email_001.txt",
-          content: "This is a sample email content discussing business matters."
-        },
-        {
-          id: 2,
-          filename: "email_002.txt",
-          content: "Meeting scheduled for next week. Please prepare the reports."
-        }
-      ];
+      const data = await GetSearchRequest(searchTerm)
       // Simulate network delay
       await new Promise(resolve => setTimeout(resolve, 500));
       setResults(data)
