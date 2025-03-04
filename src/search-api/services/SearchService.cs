@@ -6,6 +6,11 @@ namespace Searc.SearchApi.Services;
 
 public class SearchService(ISearchRepository repository) : ISearchService
 {
+    public Task<FileContent> GetFileContentAsync(int id)
+    {
+        return repository.GetFileContentAsync(id);
+    }
+
     public async Task<FileDetailsDTO> ProcessFileDetails(FileContent msg)
     {
         Console.WriteLine($"Processing file details for {msg.Filename}");

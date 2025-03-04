@@ -50,4 +50,33 @@ public class SearchController(ISearchService service, IBus bus) : Controller
             return StatusCode(500, ex.Message);
         }
     }
+
+    [HttpGet("download/{id}")]
+    public async Task<IActionResult> Download([Required] string id)
+    {
+        if (!int.TryParse(id, out int intId))
+        {
+            return BadRequest("File ID must be a valid integer");
+        }
+        if (string.IsNullOrWhiteSpace(id))
+        {
+            return BadRequest("File ID cannot be empty");
+        }
+
+        try
+        {
+            var fileContent = await service.GetFileContentAsync(intId);
+            
+            if (fileContent == null)
+            {
+                return NotFound($"File with ID '{id}' not found");
+            }
+            
+            return File(fileContent.Content, "application/octet-stream", fileContent.Filename);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, ex.Message);
+        }
+    }
 }
