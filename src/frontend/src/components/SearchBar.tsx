@@ -1,4 +1,4 @@
-import { ChangeEvent } from 'react';
+import { ChangeEvent, KeyboardEvent } from 'react';
 
 interface SearchBarProps {
   searchTerm: string;
@@ -13,6 +13,13 @@ export const SearchBar: React.FC<SearchBarProps> = ({
   handleSearch, 
   loading 
 }) => {
+  
+  const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      handleSearch();
+    }
+  };
+
   return (
     <div className="flex flex-row items-center gap-4 w-5/6">
       <input
@@ -21,6 +28,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({
         className="input input-bordered w-full"
         value={searchTerm}
         onChange={(e: ChangeEvent<HTMLInputElement>) => setSearchTerm(e.target.value)}
+        onKeyDown={handleKeyDown}
       />
       <button
         className="btn btn-primary"

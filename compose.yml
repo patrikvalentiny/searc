@@ -14,6 +14,12 @@ services:
     networks:
       - searc-network
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
 
   searc-rabbitmq:
     image: rabbitmq:3-management
@@ -84,6 +90,24 @@ services:
     ports:
       - "9411:9411"
     restart: always
+
+  flyway:
+    image: flyway/flyway:latest
+    command: >
+      migrate
+    volumes:
+      - ./sql:/flyway/sql
+    environment:
+      FLYWAY_URL: jdbc:postgresql://searc-db:${DB_PORT}/${DB_NAME}
+      FLYWAY_USER: ${DB_USER}
+      FLYWAY_PASSWORD: ${DB_PASSWORD}
+      FLYWAY_SCHEMAS: public
+      FLYWAY_CONNECT_RETRIES: 50
+    depends_on:
+      searc-postgres:
+        condition: service_healthy
+    networks:
+      - searc-network
 
 networks:
   searc-network:

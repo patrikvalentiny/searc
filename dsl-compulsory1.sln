@@ -2,11 +2,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.5.2.0
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{827E0CD3-B72D-47B6-A68D-7590B98EB39B}"
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "api", "api", "{81034408-37C8-1011-444E-4C15C2FADA8E}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "search-api", "src\api\search-api\search-api.csproj", "{0D9F4071-78D9-A2EB-7540-4CC51613A098}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "search-api", "src\search-api\search-api.csproj", "{0D9F4071-78D9-A2EB-7540-4CC51613A098}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -21,10 +17,6 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
-	EndGlobalSection
-	GlobalSection(NestedProjects) = preSolution
-		{81034408-37C8-1011-444E-4C15C2FADA8E} = {827E0CD3-B72D-47B6-A68D-7590B98EB39B}
-		{0D9F4071-78D9-A2EB-7540-4CC51613A098} = {81034408-37C8-1011-444E-4C15C2FADA8E}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {02CF470A-04E2-48C2-A4B3-79F468B6052A}

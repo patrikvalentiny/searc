@@ -402,3 +402,8 @@ FodyWeavers.xsd
 *.sln.iml
 
 .structurizr/
+local/
+
+# Environment variables
+.env.local
+.env.*.local
