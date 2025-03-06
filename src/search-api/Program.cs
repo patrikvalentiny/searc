@@ -1,6 +1,5 @@
-using System.Data;
 using dotenv.net;
-using Npgsql;
+using MonitoringService;
 using Scalar.AspNetCore;
 using Searc.SearchApi.Repositories;
 using Searc.SearchApi.Services;
@@ -14,11 +13,11 @@ DotEnv.Load(options: new DotEnvOptions(
 ));
 
 Console.WriteLine($"App Port: {Environment.GetEnvironmentVariable("APP_PORT")}");
-
 var builder = WebApplication.CreateBuilder(args);
 
 // Add environment variables to configuration
 builder.Configuration.AddEnvironmentVariables();
+
 // Add Postgres configuration
 var connectionString = $"Host={Environment.GetEnvironmentVariable("DB_HOST")};Port={Environment.GetEnvironmentVariable("DB_PORT")};Database={Environment.GetEnvironmentVariable("DB_NAME")};Username={Environment.GetEnvironmentVariable("DB_USER")};Password={Environment.GetEnvironmentVariable("DB_PASSWORD")}";
 builder.Services.AddNpgsqlDataSource(connectionString);
@@ -34,13 +33,16 @@ builder.Services.AddCors(options =>
     });
 });
 
+// Add monitoring and tracing
+builder.Host.AddMonitoring();
+builder.Services.AddTracing(builder.Configuration);
+
 // Add services to the container.
 builder.Services.AddSingleton<ISearchService, SearchService>();
 builder.Services.AddSingleton<ISearchRepository, SearchRepository>();
-// Add controllers to the container.
+
 builder.Services.AddControllers();
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
-builder.Services.AddOpenApi();
+builder.Services.AddOpenApi(); // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 
 var app = builder.Build();
 
@@ -53,9 +55,6 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-
 app.UseAuthorization();
-
 app.MapControllers();
-
 app.Run();

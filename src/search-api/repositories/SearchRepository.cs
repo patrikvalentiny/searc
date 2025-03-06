@@ -1,4 +1,3 @@
-using System.Data;
 using System.Data.Common;
 using Searc.SearchApi.Models;
 using Dapper;

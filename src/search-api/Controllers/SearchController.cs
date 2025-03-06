@@ -1,5 +1,4 @@
 using System.ComponentModel.DataAnnotations;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Searc.SearchApi.Models;
 using Searc.SearchApi.Services;
