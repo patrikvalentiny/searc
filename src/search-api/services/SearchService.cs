@@ -1,4 +1,3 @@
-using System.Threading.Tasks;
 using Searc.SearchApi.Models;
 using Searc.SearchApi.Repositories;
 
