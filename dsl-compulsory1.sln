@@ -6,6 +6,7 @@ MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "search-api", "src\search-api\search-api.csproj", "{0D9F4071-78D9-A2EB-7540-4CC51613A098}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MonitoringService", "src\Monitoring\MonitoringService.csproj", "{30728E39-CAB6-4F24-8C53-DEFD2C6F6A78}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IndexerService", "src\IndexerService\IndexerService.csproj", "{9C597B8F-0723-4186-B0F7-D6EA4A2CDED9}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -41,6 +42,18 @@ Global
 		{30728E39-CAB6-4F24-8C53-DEFD2C6F6A78}.Release|x64.Build.0 = Release|Any CPU
 		{30728E39-CAB6-4F24-8C53-DEFD2C6F6A78}.Release|x86.ActiveCfg = Release|Any CPU
 		{30728E39-CAB6-4F24-8C53-DEFD2C6F6A78}.Release|x86.Build.0 = Release|Any CPU
+		{9C597B8F-0723-4186-B0F7-D6EA4A2CDED9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9C597B8F-0723-4186-B0F7-D6EA4A2CDED9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9C597B8F-0723-4186-B0F7-D6EA4A2CDED9}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{9C597B8F-0723-4186-B0F7-D6EA4A2CDED9}.Debug|x64.Build.0 = Debug|Any CPU
+		{9C597B8F-0723-4186-B0F7-D6EA4A2CDED9}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{9C597B8F-0723-4186-B0F7-D6EA4A2CDED9}.Debug|x86.Build.0 = Debug|Any CPU
+		{9C597B8F-0723-4186-B0F7-D6EA4A2CDED9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9C597B8F-0723-4186-B0F7-D6EA4A2CDED9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9C597B8F-0723-4186-B0F7-D6EA4A2CDED9}.Release|x64.ActiveCfg = Release|Any CPU
+		{9C597B8F-0723-4186-B0F7-D6EA4A2CDED9}.Release|x64.Build.0 = Release|Any CPU
+		{9C597B8F-0723-4186-B0F7-D6EA4A2CDED9}.Release|x86.ActiveCfg = Release|Any CPU
+		{9C597B8F-0723-4186-B0F7-D6EA4A2CDED9}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
