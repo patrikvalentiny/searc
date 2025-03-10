@@ -3,6 +3,7 @@ using Monitoring;
 using Scalar.AspNetCore;
 using Searc.SearchApi.Repositories;
 using Searc.SearchApi.Services;
+using Serilog;
 
 // Load environment variables from .env file in development
 // Docker Compose will provide environment variables in production
@@ -12,8 +13,10 @@ DotEnv.Load(options: new DotEnvOptions(
     envFilePaths: [".env"]
 ));
 
-Console.WriteLine($"App Port: {Environment.GetEnvironmentVariable("APP_PORT")}");
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Host.AddMonitoring();
+builder.Services.AddTracing(builder.Configuration);
 
 // Add environment variables to configuration
 builder.Configuration.AddEnvironmentVariables();
@@ -34,8 +37,7 @@ builder.Services.AddCors(options =>
 });
 
 // Add monitoring and tracing
-builder.Host.AddMonitoring();
-builder.Services.AddTracing(builder.Configuration);
+
 
 // Add services to the container.
 builder.Services.AddSingleton<ISearchService, SearchService>();

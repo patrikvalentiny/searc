@@ -3,18 +3,16 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using OpenTelemetry.Resources;
 using Serilog;
-
 using OpenTelemetry.Trace;
 using System.Reflection;
 using System.Diagnostics;
-using Microsoft.AspNetCore.Hosting;
+using System.Runtime.CompilerServices;
 
 namespace Monitoring;
 
 public static class MonitoringService
 {
-
-    public static readonly ActivitySource ActivitySource = new("searc", "1.0.0");
+        public static readonly ActivitySource ActivitySource = new("searc", "1.0.0");
 
     public static void AddMonitoring(this IHostBuilder builder)
     {
@@ -37,7 +35,6 @@ public static class MonitoringService
         var serviceName = Assembly.GetEntryAssembly()?.GetName().Name ?? "search-api";
         var version = "1.0.0";
 
-        services.AddSingleton<MyResourceDetector>();
 
         services.AddOpenTelemetry().WithTracing(tracerBuilder =>
         {
@@ -57,23 +54,5 @@ public static class MonitoringService
         });
 
         return services;
-    }
-}
-
-public class MyResourceDetector : IResourceDetector
-{
-    private readonly IWebHostEnvironment webHostEnvironment;
-
-    public MyResourceDetector(IWebHostEnvironment webHostEnvironment)
-    {
-        this.webHostEnvironment = webHostEnvironment;
-    }
-
-    public Resource Detect()
-    {
-        return ResourceBuilder.CreateEmpty()
-            .AddService(serviceName: this.webHostEnvironment.ApplicationName)
-            .AddAttributes(new Dictionary<string, object> { ["host.environment"] = this.webHostEnvironment.EnvironmentName })
-            .Build();
     }
 }

@@ -8,14 +8,14 @@ namespace Searc.SearchApi.Controllers;
 
 [ApiController]
 [Route("api/search/v1")]
-public class SearchController(ISearchService service) : Controller
+public class SearchController(ISearchService service, ILogger<SearchController> logger) : Controller
 {
 
     [HttpGet]
     public async Task<ActionResult<IEnumerable<FileDetailsDTO>>> Search([Required] string query)
     {
         using var activity = Monitoring.MonitoringService.ActivitySource.StartActivity("SearchController.Search");
-        
+        logger.LogInformation("Searching for files with query: {Query}", query);
         if (string.IsNullOrWhiteSpace(query))
         {
             return BadRequest("Search query cannot be empty");
