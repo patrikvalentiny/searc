@@ -36,23 +36,13 @@ internal class Program
 
         var service = host.Services.GetRequiredService<IIndexerService>();
 
-        string filePath = "testfile.txt";
-        if (File.Exists(filePath))
+        // Test file for processing
+        var testFile = new CleanedFileDTO
         {
-            string content = await File.ReadAllTextAsync(filePath);
-            var testFile = new CleanedFileDTO
-            {
-                Filename = "testfile.txt",
-                Content = content
-            };
+            Filename = "example.txt",
+            Content = "hello world hello"
+        };
 
-            Console.WriteLine($"Processing file: {testFile.Filename}");
-            await service.ProcessFileAsync(testFile);
-            Console.WriteLine("File processing completed!");
-        }
-        else
-        {
-            Console.WriteLine($"File '{filePath}' not found. Please create it first.");
-        }
+        await service.ProcessFileAsync(testFile);
     }
 }

@@ -82,6 +82,7 @@ services:
       timeout: 10s
       retries: 5
       start_period: 40s
+      
   searc:
     build:
       context: .
@@ -222,7 +223,25 @@ services:
         condition: service_healthy
     networks:
       - searc-network
-
+  
+  # Indexer Service    
+  indexer-service:
+    build:
+      context: .
+      dockerfile: src/IndexerService/Dockerfile
+    depends_on:
+      indexer-flyway:
+        condition: service_completed_successfully
+    environment:
+      INDEXER_DB_HOST: indexer-db
+      INDEXER_DB_PORT: 5432
+      INDEXER_DB_NAME: indexer
+      INDEXER_DB_USER: ${DB_USER}
+      INDEXER_DB_PASSWORD: ${DB_PASSWORD}
+    networks:
+      - searc-network
+    restart: no
+    
 networks:
   searc-network:
     driver: bridge
