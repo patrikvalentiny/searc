@@ -22,9 +22,10 @@ var bus = RabbitHutch.CreateBus("host=localhost");
 builder.Services.AddSingleton(bus);
 builder.Services.AddHostedService<CleanedFileHandler>();
 builder.Services.AddSingleton<CleanedMessagePublisher>();
+
 using IHost host = builder.Build();
 
-
+host.Start();
 using var activity = MonitoringService.ActivitySource.StartActivity("CleanerService");
 var messagePublisher = host.Services.GetRequiredService<CleanedMessagePublisher>();
 var cleanerService = new CleanerService.Application.Services.CleanerService(messagePublisher);

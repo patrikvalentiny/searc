@@ -8,6 +8,7 @@ public class CleanedFileHandler(IBus bus) : BackgroundService
 {
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
+        Log.Debug("Starting CleanedFileHandler");
         var subscriptionResult = await bus.PubSub.SubscribeAsync<CleanedFileDTO>("CleanedFile", async message =>
         {
             Log.Logger.Information("Received message from RabbitMQ");
