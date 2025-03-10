@@ -6,9 +6,8 @@ using Serilog;
 using OpenTelemetry.Trace;
 using System.Reflection;
 using System.Diagnostics;
-using System.Runtime.CompilerServices;
 using OpenTelemetry;
-using System.Threading.Tasks;
+using Serilog.Enrichers.Span;
 
 namespace Monitoring;
 
@@ -89,6 +88,7 @@ public static class MonitoringService
             .Enrich.WithEnvironmentName()
             .Enrich.WithProcessId()
             .Enrich.WithThreadId()
+            .Enrich.WithSpan()
             .MinimumLevel.Debug()
             .WriteTo.Seq(seqUrl ?? "http://localhost:5341")
             .WriteTo.Console()
