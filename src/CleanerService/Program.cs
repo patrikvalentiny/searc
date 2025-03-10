@@ -26,10 +26,11 @@ builder.Services.AddSingleton<CleanedMessagePublisher>();
 using IHost host = builder.Build();
 
 host.Start();
-using var activity = MonitoringService.ActivitySource.StartActivity("CleanerService");
+using (MonitoringService.ActivitySource.StartActivity("CleanerService")){
 var messagePublisher = host.Services.GetRequiredService<CleanedMessagePublisher>();
 var cleanerService = new CleanerService.Application.Services.CleanerService(messagePublisher);
 var cleanedFiles = await cleanerService.CleanFilesAsync();
 await cleanerService.PublishCleanedFilesAsync(cleanedFiles);
+}
 Console.ReadLine();
 await MonitoringService.Dispose();

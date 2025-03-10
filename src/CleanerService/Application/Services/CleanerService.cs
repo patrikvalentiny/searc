@@ -33,9 +33,9 @@ public class CleanerService(CleanedMessagePublisher messagePublisher) {
 
     public async Task PublishCleanedFilesAsync(IEnumerable<CleanedFileDTO> cleanedFiles) {
         using var activity = MonitoringService.ActivitySource.StartActivity("CleanerService.PublishCleanedFilesAsync");
-        foreach (var cleanedFile in cleanedFiles) {
+        await Parallel.ForEachAsync(cleanedFiles, async (cleanedFile, cancellationToken) => {
             Log.Logger.Information("Publishing cleaned file {Filename}", cleanedFile.Filename);
             await messagePublisher!.PublishCleanedMessage(cleanedFile);
-        }
+        });
     }
 }

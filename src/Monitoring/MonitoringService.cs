@@ -5,9 +5,9 @@ using OpenTelemetry.Resources;
 using Serilog;
 using OpenTelemetry.Trace;
 using System.Reflection;
-using System.Diagnostics;
 using OpenTelemetry;
 using Serilog.Enrichers.Span;
+using System.Diagnostics;
 
 namespace Monitoring;
 
