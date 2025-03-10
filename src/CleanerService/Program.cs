@@ -29,7 +29,9 @@ host.Start();
 using (MonitoringService.ActivitySource.StartActivity("CleanerService")){
 var messagePublisher = host.Services.GetRequiredService<CleanedMessagePublisher>();
 var cleanerService = new CleanerService.Application.Services.CleanerService(messagePublisher);
-var cleanedFiles = await cleanerService.CleanFilesAsync();
+Console.WriteLine("Enter relative path to clean files (e.g. 'files/to/clean'):");
+var relativePath = Console.ReadLine();
+var cleanedFiles = await cleanerService.CleanFilesAsync(relativePath ?? "../../data");
 await cleanerService.PublishCleanedFilesAsync(cleanedFiles);
 }
 Console.ReadLine();
