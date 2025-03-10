@@ -5,7 +5,7 @@ VisualStudioVersion = 17.5.2.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "search-api", "src\search-api\search-api.csproj", "{0D9F4071-78D9-A2EB-7540-4CC51613A098}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MonitoringService", "src\MonitoringService\MonitoringService.csproj", "{30728E39-CAB6-4F24-8C53-DEFD2C6F6A78}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MonitoringService", "src\Monitoring\MonitoringService.csproj", "{30728E39-CAB6-4F24-8C53-DEFD2C6F6A78}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

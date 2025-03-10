@@ -7,6 +7,7 @@ public class SearchService(ISearchRepository repository) : ISearchService
 {
     public  async Task<IEnumerable<FileDetailsDTO>> SearchFilesAsync(string query)
     {
+        using var activity = Monitoring.MonitoringService.ActivitySource.StartActivity("SearchService.SearchFilesAsync");
         return await repository.SearchAsync(query);
     }
 }

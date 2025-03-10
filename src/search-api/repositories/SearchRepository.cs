@@ -8,6 +8,7 @@ public class SearchRepository(DbDataSource dataSource) : ISearchRepository
 {
     public async Task<IEnumerable<FileDetailsDTO>> SearchAsync(string query)
     {
+        using var activity = Monitoring.MonitoringService.ActivitySource.StartActivity("SearchRepository.SearchAsync");
         var sql = @$"SELECT f.name as {nameof(FileDetailsDTO.Filename)} FROM words w
         INNER JOIN occurrences o ON w.id = o.word_id
         INNER JOIN files f ON o.file_id = f.id

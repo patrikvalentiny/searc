@@ -1,5 +1,5 @@
 using dotenv.net;
-using MonitoringService;
+using Monitoring;
 using Scalar.AspNetCore;
 using Searc.SearchApi.Repositories;
 using Searc.SearchApi.Services;
