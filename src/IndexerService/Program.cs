@@ -1,44 +1,58 @@
 using dotenv.net;
 using IndexerService.Application.Services;
 using IndexerService.Infrastructure.Repositories;
-using Monitoring;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using Npgsql;
+using SharedModels;
 
-// Load environment variables from .env file in development
-// Docker Compose will provide environment variables in production
-DotEnv.Load(options: new DotEnvOptions(
-    probeForEnv: true,
-    probeLevelsToSearch: 7,
-    envFilePaths: [".env"]
-));
-
-var builder = WebApplication.CreateBuilder(args);
-
-builder.Host.AddMonitoring();
-builder.Services.AddTracing(builder.Configuration);
-
-// Add environment variables to configuration
-builder.Configuration.AddEnvironmentVariables();
-
-// Add Postgres configuration
-var connectionString = $"" +
-                       $"Host={Environment.GetEnvironmentVariable("INDEXER_DB_HOST")};" +
-                       $"Port={Environment.GetEnvironmentVariable("INDEXER_DB_PORT")};" +
-                       $"Database={Environment.GetEnvironmentVariable("INDEXER_DB_NAME")};" +
-                       $"Username={Environment.GetEnvironmentVariable("INDEXER_DB_USER")};" +
-                       $"Password={Environment.GetEnvironmentVariable("INDEXER_DB_PASSWORD")}";
-builder.Services.AddNpgsqlDataSource(connectionString);
-
-builder.Services.AddSingleton<IIndexerService, IIndexerService>();
-builder.Services.AddSingleton<IIndexerRepository, IndexerRepository>();
-
-builder.Services.AddOpenApi(); // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
-
-var app = builder.Build();
-
-if (app.Environment.IsDevelopment())
+internal class Program
 {
-    app.MapOpenApi();
-}
+    private static async Task Main(string[] args)
+    {
+        // Load environment variables
+        DotEnv.Load(options: new DotEnvOptions(
+            probeForEnv: true,
+            probeLevelsToSearch: 7,
+            envFilePaths: [".env"]
+        ));
 
-app.UseHttpsRedirection();
-app.Run();
+        using var host = Host.CreateDefaultBuilder()
+            .ConfigureServices((context, services) =>
+            {
+                var config = context.Configuration;
+
+                var connectionString = $"Host={Environment.GetEnvironmentVariable("INDEXER_DB_HOST")};" +
+                                       $"Port={Environment.GetEnvironmentVariable("INDEXER_DB_PORT")};" +
+                                       $"Database={Environment.GetEnvironmentVariable("INDEXER_DB_NAME")};" +
+                                       $"Username={Environment.GetEnvironmentVariable("INDEXER_DB_USER")};" +
+                                       $"Password={Environment.GetEnvironmentVariable("INDEXER_DB_PASSWORD")}";
+
+                services.AddSingleton<NpgsqlDataSource>(_ => NpgsqlDataSource.Create(connectionString));
+                services.AddSingleton<IIndexerRepository, IndexerRepository>();
+                services.AddSingleton<IIndexerService, IndexerService.Application.Services.IndexerService>();
+            })
+            .Build();
+
+        var service = host.Services.GetRequiredService<IIndexerService>();
+
+        string filePath = "testfile.txt";
+        if (File.Exists(filePath))
+        {
+            string content = await File.ReadAllTextAsync(filePath);
+            var testFile = new CleanedFileDTO
+            {
+                Filename = "testfile.txt",
+                Content = content
+            };
+
+            Console.WriteLine($"Processing file: {testFile.Filename}");
+            await service.ProcessFileAsync(testFile);
+            Console.WriteLine("File processing completed!");
+        }
+        else
+        {
+            Console.WriteLine($"File '{filePath}' not found. Please create it first.");
+        }
+    }
+}

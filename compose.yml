@@ -20,6 +20,29 @@ services:
       timeout: 5s
       retries: 5
       start_period: 10s
+  
+  # Indexer Postgres    
+  indexer-postgres:
+    image: postgres:latest
+    container_name: indexer-db
+    hostname: indexer-db
+    environment:
+      POSTGRES_USER: ${INDEXER_DB_USER}
+      POSTGRES_PASSWORD: ${INDEXER_DB_PASSWORD}
+      POSTGRES_DB: ${INDEXER_DB_NAME}
+    ports:
+      - "${INDEXER_DB_PORT}:5432"
+    volumes:
+      - indexer_postgres_data:/var/lib/postgresql/data
+    networks:
+      - searc-network
+    restart: unless-stopped
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${INDEXER_DB_USER} -d ${INDEXER_DB_NAME}" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
 
   cleaner-postgres:
     image: postgres:latest
@@ -162,6 +185,25 @@ services:
         condition: service_healthy
     networks:
       - searc-network
+  
+  # Indexer Flyway      
+  indexer-flyway:
+    image: flyway/flyway:latest
+    command: >
+      migrate
+    volumes:
+      - ./sql/indexer:/flyway/sql
+    environment:
+      FLYWAY_URL: jdbc:postgresql://indexer-db:${INDEXER_DB_PORT}/${INDEXER_DB_NAME}
+      FLYWAY_USER: ${INDEXER_DB_USER}
+      FLYWAY_PASSWORD: ${INDEXER_DB_PASSWORD}
+      FLYWAY_SCHEMAS: public
+      FLYWAY_CONNECT_RETRIES: 50
+    depends_on:
+      indexer-postgres:
+        condition: service_healthy
+    networks:
+      - searc-network
 
   flyway-cleaner:
     image: flyway/flyway:latest
@@ -188,3 +230,4 @@ networks:
 volumes:
   postgres_data:
   cleaner_postgres_data:
+  indexer_postgres_data:  
