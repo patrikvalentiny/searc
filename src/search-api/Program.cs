@@ -1,4 +1,5 @@
 using dotenv.net;
+using EasyNetQ;
 using Monitoring;
 using Scalar.AspNetCore;
 using Searc.SearchApi.Repositories;
@@ -56,6 +57,9 @@ builder.Services.AddCors(options =>
               .AllowAnyMethod();
     });
 });
+
+var bus = RabbitHutch.CreateBus($"host={Environment.GetEnvironmentVariable("RABBITMQ_HOST")}");
+builder.Services.AddSingleton(bus);
 
 // Add services to the container.
 builder.Services.AddSingleton<ISearchService, SearchService>();
