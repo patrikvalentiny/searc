@@ -176,7 +176,7 @@ services:
     volumes:
       - ./sql/search:/flyway/sql
     environment:
-      FLYWAY_URL: jdbc:postgresql://searc-db:${DB_PORT}/${DB_NAME}
+      FLYWAY_URL: jdbc:postgresql://searc-db:5432/${DB_NAME}
       FLYWAY_USER: ${DB_USER}
       FLYWAY_PASSWORD: ${DB_PASSWORD}
       FLYWAY_SCHEMAS: public
@@ -195,7 +195,7 @@ services:
     volumes:
       - ./sql/indexer:/flyway/sql
     environment:
-      FLYWAY_URL: jdbc:postgresql://indexer-db:${INDEXER_DB_PORT}/${INDEXER_DB_NAME}
+      FLYWAY_URL: jdbc:postgresql://indexer-db:5432/${INDEXER_DB_NAME}
       FLYWAY_USER: ${INDEXER_DB_USER}
       FLYWAY_PASSWORD: ${INDEXER_DB_PASSWORD}
       FLYWAY_SCHEMAS: public
@@ -230,14 +230,27 @@ services:
       context: .
       dockerfile: src/IndexerService/Dockerfile
     depends_on:
+      indexer-postgres:
+        condition: service_healthy
       indexer-flyway:
         condition: service_completed_successfully
+      searc-rabbitmq:
+        condition: service_healthy
+      cleaner-service:
+        condition: service_started
     environment:
+      ASPNETCORE_ENVIRONMENT: "Production"
       INDEXER_DB_HOST: indexer-db
       INDEXER_DB_PORT: 5432
-      INDEXER_DB_NAME: indexer
-      INDEXER_DB_USER: ${DB_USER}
-      INDEXER_DB_PASSWORD: ${DB_PASSWORD}
+      INDEXER_DB_NAME: ${INDEXER_DB_NAME}
+      INDEXER_DB_USER: ${INDEXER_DB_USER}
+      INDEXER_DB_PASSWORD: ${INDEXER_DB_PASSWORD}
+      RABBITMQ_HOST: searc-rabbitmq
+      RABBITMQ_PORT: ${RABBITMQ_PORT}
+      RABBITMQ_USER: ${RABBITMQ_USER}
+      RABBITMQ_PASS: ${RABBITMQ_PASS}
+      SEQ_URL: http://seq:5341
+      ZIPKIN_URL: http://zipkin:9411/api/v2/spans
     networks:
       - searc-network
     restart: no

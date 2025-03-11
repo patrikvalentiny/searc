@@ -408,3 +408,5 @@ local/
 # Environment variables
 .env.local
 .env.*.local
+
+.DS_Store

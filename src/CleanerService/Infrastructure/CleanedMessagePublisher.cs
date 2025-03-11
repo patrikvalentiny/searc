@@ -17,6 +17,6 @@ public class CleanedMessagePublisher (IBus bus){
         // Log.Logger.Debug("Injecting headers {Headers}", headers);
         // Log.Logger.Debug
         Log.Logger.Information("Publishing message to RabbitMQ");
-        await bus.PubSub.PublishAsync(message);
+        await bus.PubSub.PublishAsync(message, c => c.WithTopic("CleanedFile"));
     }
 }
