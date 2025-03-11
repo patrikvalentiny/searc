@@ -11,6 +11,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IndexerService", "src\Index
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CleanerService", "src\CleanerService\CleanerService.csproj", "{CAE433F8-8B84-4FFC-A632-7318A0D207DE}"
 EndProject
+<<<<<<< HEAD
+=======
+
+>>>>>>> 6585c3e (Fix path separator in SharedModels project reference in solution file)
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SharedModels", "src\SharedModels\SharedModels.csproj", "{4BAB3B5E-E1FB-4193-8499-9F17B413A968}"
 EndProject
 Global
