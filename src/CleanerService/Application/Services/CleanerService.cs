@@ -7,7 +7,7 @@ using SharedModels;
 namespace CleanerService.Application.Services;
 
 public class CleanerService(CleanedMessagePublisher messagePublisher)
-{{
+{
 
     public async Task<IEnumerable<CleanedFileDTO>> CleanFilesAsync(string path = "../../data") {
         
