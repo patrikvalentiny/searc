@@ -1,6 +1,7 @@
 using System.Data.Common;
 using Searc.SearchApi.Models;
 using Dapper;
+using Serilog;
 
 namespace Searc.SearchApi.Repositories;
 
