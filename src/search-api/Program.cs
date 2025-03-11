@@ -4,6 +4,22 @@ using Scalar.AspNetCore;
 using Searc.SearchApi.Repositories;
 using Searc.SearchApi.Services;
 
+
+var env = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Development";
+Console.WriteLine($"Environment: {env}");
+var seqUrl = Environment.GetEnvironmentVariable("SEQ_URL") ?? "http://localhost:5341";
+var zipkinUrl = Environment.GetEnvironmentVariable("ZIPKIN_URL") ?? "http://localhost:9411/api/v2/spans";
+if (env == "Development")
+{
+    seqUrl = "http://localhost:5341";
+    zipkinUrl = "http://localhost:9411/api/v2/spans";
+}
+
+Console.WriteLine($"Connecting to Seq at: {seqUrl}");
+Console.WriteLine($"Connecting to Zipkin at: {zipkinUrl}");
+MonitoringService.SetupSerilog(seqUrl);
+MonitoringService.SetupTracing(zipkinUrl);
+
 // Load environment variables from .env file in development
 // Docker Compose will provide environment variables in production
 DotEnv.Load(options: new DotEnvOptions(
@@ -14,15 +30,21 @@ DotEnv.Load(options: new DotEnvOptions(
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Host.AddMonitoring();
-builder.Services.AddTracing(builder.Configuration);
-
 // Add environment variables to configuration
 builder.Configuration.AddEnvironmentVariables();
 
+
 // Add Postgres configuration
-var connectionString = $"Host={Environment.GetEnvironmentVariable("DB_HOST")};Port={Environment.GetEnvironmentVariable("DB_PORT")};Database={Environment.GetEnvironmentVariable("DB_NAME")};Username={Environment.GetEnvironmentVariable("DB_USER")};Password={Environment.GetEnvironmentVariable("DB_PASSWORD")}";
+var connectionString = @$"
+    Host={Environment.GetEnvironmentVariable("DB_HOST")};
+    Port={Environment.GetEnvironmentVariable("DB_PORT")};
+    Database={Environment.GetEnvironmentVariable("DB_NAME")};
+    Username={Environment.GetEnvironmentVariable("DB_USER")};
+    Password={Environment.GetEnvironmentVariable("DB_PASSWORD")}
+";
 builder.Services.AddNpgsqlDataSource(connectionString);
+
+builder.Services.AddControllers();
 
 // Add CORS policy
 builder.Services.AddCors(options =>
@@ -35,15 +57,9 @@ builder.Services.AddCors(options =>
     });
 });
 
-// Add monitoring and tracing
-
-
 // Add services to the container.
 builder.Services.AddSingleton<ISearchService, SearchService>();
 builder.Services.AddSingleton<ISearchRepository, SearchRepository>();
-
-builder.Services.AddControllers();
-builder.Services.AddOpenApi(); // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 
 var app = builder.Build();
 
@@ -59,3 +75,4 @@ app.UseHttpsRedirection();
 app.UseAuthorization();
 app.MapControllers();
 app.Run();
+await MonitoringService.Dispose();
