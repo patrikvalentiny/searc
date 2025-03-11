@@ -21,29 +21,6 @@ services:
       retries: 5
       start_period: 10s
 
-  # Indexer Postgres    
-  indexer-postgres:
-    image: postgres:latest
-    container_name: indexer-db
-    hostname: indexer-db
-    environment:
-      POSTGRES_USER: ${INDEXER_DB_USER}
-      POSTGRES_PASSWORD: ${INDEXER_DB_PASSWORD}
-      POSTGRES_DB: ${INDEXER_DB_NAME}
-    ports:
-      - "${INDEXER_DB_PORT}:5432"
-    volumes:
-      - indexer_postgres_data:/var/lib/postgresql/data
-    networks:
-      - searc-network
-    restart: unless-stopped
-    healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U ${INDEXER_DB_USER} -d ${INDEXER_DB_NAME}" ]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 10s
-
   searc-rabbitmq:
     image: rabbitmq:3-management
     container_name: "searc-rabbitmq"
@@ -85,6 +62,8 @@ services:
       DB_NAME: ${DB_NAME}
       DB_USER: ${DB_USER}
       DB_PASSWORD: ${DB_PASSWORD}
+      SEQ_URL: http://seq:5341
+      
     networks:
       - searc-network
     restart: unless-stopped
@@ -162,24 +141,6 @@ services:
       FLYWAY_CONNECT_RETRIES: 50
     depends_on:
       searc-postgres:
-        condition: service_healthy
-    networks:
-      - searc-network
-
-  flyway-cleaner:
-    image: flyway/flyway:latest
-    command: >
-      migrate
-    volumes:
-      - ./sql/cleaner:/flyway/sql
-    environment:
-      FLYWAY_URL: jdbc:postgresql://cleaner-db:5432/${DB_CLEANER_NAME}
-      FLYWAY_USER: ${DB_CLEANER_USER}
-      FLYWAY_PASSWORD: ${DB_CLEANER_PASSWORD}
-      FLYWAY_SCHEMAS: public
-      FLYWAY_CONNECT_RETRIES: 50
-    depends_on:
-      cleaner-postgres:
         condition: service_healthy
     networks:
       - searc-network
