@@ -25,31 +25,22 @@ public class CleanerService(CleanedMessagePublisher messagePublisher)
         return cleanedFiles;
     }
 
-    private async Task<CleanedFileDTO?> CleanFileAsync(string path) {
+    private async Task<CleanedFileDTO> CleanFileAsync(string path) {
         using var activity = MonitoringService.ActivitySource.StartActivity("CleanerService.CleanFileAsync");
-        
-        try {
-            var message = await MimeMessage.LoadAsync(path);
-            var cleanedContent = message.TextBody;
-            var filename = Path.GetFileName(path);
-            var pathParts = Path.GetDirectoryName(path)!.Split(Path.DirectorySeparatorChar);
-            var dataIndex = Array.IndexOf(pathParts, "data");
-            var parentFolder = string.Join("_", pathParts.Skip(dataIndex + 1));
-            var cleanedFilename = $"{parentFolder}_{filename[..^1]}.txt";
-            Log.Logger.Information("Cleaning file {Filename}", cleanedFilename);
-            return new CleanedFileDTO { Filename = cleanedFilename, Content = cleanedContent };
-        } 
-        catch (Exception ex) {
-            Log.Logger.Error("Skipping file {Path} due to error: {ErrorMessage}", path, ex.Message);
-            return null; 
-        }
+        var message = await MimeMessage.LoadAsync(path);
+        var cleanedContent = message.TextBody;
+        var filename = Path.GetFileName(path);
+        var pathParts = Path.GetDirectoryName(path)!.Split(Path.DirectorySeparatorChar);
+        var dataIndex = Array.IndexOf(pathParts, "data");
+        var parentFolder = string.Join("_", pathParts.Skip(dataIndex + 1));
+        var cleanedFilename = $"{parentFolder}_{filename[..^1]}.txt";
+        Log.Logger.Information("Cleaning file {Filename}", cleanedFilename);
+        return new CleanedFileDTO { Filename = cleanedFilename, Content = cleanedContent };
     }
 
-    public async Task PublishCleanedFilesAsync(IEnumerable<CleanedFileDTO> cleanedFiles)
-    {
-        using var activity = MonitoringService.ActivitySource.StartActivity("PublishCleanedFilesAsync");
-        await Parallel.ForEachAsync(cleanedFiles, async (cleanedFile, cancellationToken) =>
-        {
+    public async Task PublishCleanedFilesAsync(IEnumerable<CleanedFileDTO> cleanedFiles) {
+        using var activity = MonitoringService.ActivitySource.StartActivity("CleanerService.PublishCleanedFilesAsync");
+        await Parallel.ForEachAsync(cleanedFiles, async (cleanedFile, cancellationToken) => {
             Log.Logger.Information("Publishing cleaned file {Filename}", cleanedFile.Filename);
             await messagePublisher!.PublishCleanedMessage(cleanedFile);
         });
