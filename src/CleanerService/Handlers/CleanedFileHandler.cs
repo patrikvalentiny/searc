@@ -18,7 +18,7 @@ public class CleanedFileHandler(IBus bus) : BackgroundService
             var propagator = new TraceContextPropagator();
             var headers = message.PropagationHeaders;
             var context = propagator.Extract(default, headers,  (r, key) => [r.ContainsKey(key) ? r[key].ToString() : string.Empty]).ActivityContext;
-            using var activity = MonitoringService.ActivitySource.StartActivity("CleanerService.CleanedFileHandler", ActivityKind.Consumer, context);
+            using var activity = MonitoringService.ActivitySource.StartActivity("CleanedFileHandler", ActivityKind.Consumer, context);
             await Task.CompletedTask;
         }, cancellationToken: stoppingToken).AsTask();
 
