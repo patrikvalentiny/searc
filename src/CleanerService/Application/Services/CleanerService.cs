@@ -14,7 +14,7 @@ public class CleanerService(CleanedMessagePublisher messagePublisher)
         using var activity = MonitoringService.ActivitySource.StartActivity("CleanerService.CleanFilesAsync");
         string[] allFiles = Directory.GetFiles(path, "", SearchOption.AllDirectories);
         Log.Logger.Information("Cleaning {FileCount} files", allFiles.Length);
-        var paths = allFiles.Select(Path.GetFullPath).Take(10);
+        var paths = allFiles.Select(Path.GetFullPath);
         var tasks = paths.Select(CleanFileAsync);
 
         var cleanedFiles = (await Task.WhenAll(tasks)).Where(f => f != null);

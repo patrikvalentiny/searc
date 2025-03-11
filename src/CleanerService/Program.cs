@@ -1,5 +1,4 @@
 using EasyNetQ;
-using Handlers;
 using Infrastructure;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -25,7 +24,6 @@ Console.WriteLine($"Connecting to RabbitMQ at: {rabbitHost}");
 var bus = RabbitHutch.CreateBus($"host={rabbitHost}");
 builder.Services.AddSingleton(bus);
 
-builder.Services.AddHostedService<CleanedFileHandler>();
 builder.Services.AddSingleton<CleanedMessagePublisher>();
 var connectionString = @$"
     Host={Environment.GetEnvironmentVariable("DB_CLEANER_HOST")};
