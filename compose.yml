@@ -20,7 +20,7 @@ services:
       timeout: 5s
       retries: 5
       start_period: 10s
-  
+
   # Indexer Postgres    
   indexer-postgres:
     image: postgres:latest
@@ -62,7 +62,6 @@ services:
       timeout: 10s
       retries: 5
       start_period: 40s
-      
   searc:
     build:
       context: .
@@ -158,7 +157,7 @@ services:
     volumes:
       - ./sql/search:/flyway/sql
     environment:
-      FLYWAY_URL: jdbc:postgresql://searc-db:5432/${DB_NAME}
+      FLYWAY_URL: jdbc:postgresql://searc-db:${DB_PORT}/${DB_NAME}
       FLYWAY_USER: ${DB_USER}
       FLYWAY_PASSWORD: ${DB_PASSWORD}
       FLYWAY_SCHEMAS: public
