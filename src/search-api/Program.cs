@@ -3,7 +3,6 @@ using Monitoring;
 using Scalar.AspNetCore;
 using Searc.SearchApi.Repositories;
 using Searc.SearchApi.Services;
-using Serilog;
 
 // Load environment variables from .env file in development
 // Docker Compose will provide environment variables in production

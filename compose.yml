@@ -20,6 +20,49 @@ services:
       timeout: 5s
       retries: 5
       start_period: 10s
+  
+  # Indexer Postgres    
+  indexer-postgres:
+    image: postgres:latest
+    container_name: indexer-db
+    hostname: indexer-db
+    environment:
+      POSTGRES_USER: ${INDEXER_DB_USER}
+      POSTGRES_PASSWORD: ${INDEXER_DB_PASSWORD}
+      POSTGRES_DB: ${INDEXER_DB_NAME}
+    ports:
+      - "${INDEXER_DB_PORT}:5432"
+    volumes:
+      - indexer_postgres_data:/var/lib/postgresql/data
+    networks:
+      - searc-network
+    restart: unless-stopped
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${INDEXER_DB_USER} -d ${INDEXER_DB_NAME}" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  cleaner-postgres:
+    image: postgres:latest
+    container_name: cleaner-db
+    hostname: cleaner-db
+    environment:
+      POSTGRES_USER: ${DB_CLEANER_USER}
+      POSTGRES_PASSWORD: ${DB_CLEANER_PASSWORD}
+      POSTGRES_DB: ${DB_CLEANER_NAME}
+    ports:
+      - "${DB_CLEANER_PORT}:5432"
+    networks:
+      - searc-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_CLEANER_USER} -d ${DB_CLEANER_NAME}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
 
   searc-rabbitmq:
     image: rabbitmq:3-management
@@ -39,10 +82,11 @@ services:
       timeout: 10s
       retries: 5
       start_period: 40s
+      
   searc:
     build:
       context: .
-      dockerfile: Dockerfile
+      dockerfile: src/search-api/Dockerfile
     depends_on:
       searc-rabbitmq:
         condition: service_healthy
@@ -51,6 +95,7 @@ services:
     ports:
       - "${APP_PORT}:8080"
     environment:
+      ASPNETCORE_ENVIRONMENT: "Production"
       APP_PORT: ${APP_PORT}
       RABBITMQ_HOST: searc-rabbitmq
       RABBITMQ_PORT: ${RABBITMQ_PORT}
@@ -65,6 +110,37 @@ services:
       - searc-network
     restart: unless-stopped
 
+  cleaner-service:
+    build:
+      context: .
+      dockerfile: src/CleanerService/Dockerfile
+    depends_on:
+      cleaner-postgres:
+        condition: service_healthy
+      flyway-cleaner:
+        condition: service_completed_successfully
+      searc-rabbitmq:
+        condition: service_healthy
+    environment:
+      ASPNETCORE_ENVIRONMENT: "Production"
+      DB_CLEANER_HOST: cleaner-db
+      DB_CLEANER_PORT: ${DB_CLEANER_PORT}
+      DB_CLEANER_NAME: ${DB_CLEANER_NAME}
+      DB_CLEANER_USER: ${DB_CLEANER_USER}
+      DB_CLEANER_PASSWORD: ${DB_CLEANER_PASSWORD}
+      APP_DATA_PATH: /data
+      RABBITMQ_HOST: searc-rabbitmq
+      RABBITMQ_PORT: ${RABBITMQ_PORT}
+      RABBITMQ_USER: ${RABBITMQ_USER}
+      RABBITMQ_PASS: ${RABBITMQ_PASS}
+      SEQ_URL: http://seq:5341
+      ZIPKIN_URL: http://zipkin:9411/api/v2/spans
+    networks:
+      - searc-network
+    volumes:
+      - ./data:/data
+    restart: no
+
   structurizr-lite:
     image: structurizr/lite
     container_name: structurizr-lite
@@ -72,8 +148,6 @@ services:
       - "8080:8080"
     volumes:
       - ./structurizr:/usr/local/structurizr
-    networks:
-      - searc-network
     restart: unless-stopped
   
   seq:
@@ -83,6 +157,8 @@ services:
       - "5341:80"
     environment:
       - ACCEPT_EULA=Y
+    networks:
+      - searc-network
 
   zipkin:
     image: openzipkin/zipkin
@@ -90,15 +166,17 @@ services:
     ports:
       - "9411:9411"
     restart: always
+    networks:
+      - searc-network
 
   flyway:
     image: flyway/flyway:latest
     command: >
       migrate
     volumes:
-      - ./sql:/flyway/sql
+      - ./sql/search:/flyway/sql
     environment:
-      FLYWAY_URL: jdbc:postgresql://searc-db:${DB_PORT}/${DB_NAME}
+      FLYWAY_URL: jdbc:postgresql://searc-db:5432/${DB_NAME}
       FLYWAY_USER: ${DB_USER}
       FLYWAY_PASSWORD: ${DB_PASSWORD}
       FLYWAY_SCHEMAS: public
@@ -108,10 +186,80 @@ services:
         condition: service_healthy
     networks:
       - searc-network
+  
+  # Indexer Flyway      
+  indexer-flyway:
+    image: flyway/flyway:latest
+    command: >
+      migrate
+    volumes:
+      - ./sql/indexer:/flyway/sql
+    environment:
+      FLYWAY_URL: jdbc:postgresql://indexer-db:5432/${INDEXER_DB_NAME}
+      FLYWAY_USER: ${INDEXER_DB_USER}
+      FLYWAY_PASSWORD: ${INDEXER_DB_PASSWORD}
+      FLYWAY_SCHEMAS: public
+      FLYWAY_CONNECT_RETRIES: 50
+    depends_on:
+      indexer-postgres:
+        condition: service_healthy
+    networks:
+      - searc-network
 
+  flyway-cleaner:
+    image: flyway/flyway:latest
+    command: >
+      migrate
+    volumes:
+      - ./sql/cleaner:/flyway/sql
+    environment:
+      FLYWAY_URL: jdbc:postgresql://cleaner-db:5432/${DB_CLEANER_NAME}
+      FLYWAY_USER: ${DB_CLEANER_USER}
+      FLYWAY_PASSWORD: ${DB_CLEANER_PASSWORD}
+      FLYWAY_SCHEMAS: public
+      FLYWAY_CONNECT_RETRIES: 50
+    depends_on:
+      cleaner-postgres:
+        condition: service_healthy
+    networks:
+      - searc-network
+  
+  # Indexer Service    
+  indexer-service:
+    build:
+      context: .
+      dockerfile: src/IndexerService/Dockerfile
+    depends_on:
+      indexer-postgres:
+        condition: service_healthy
+      indexer-flyway:
+        condition: service_completed_successfully
+      searc-rabbitmq:
+        condition: service_healthy
+      cleaner-service:
+        condition: service_started
+    environment:
+      ASPNETCORE_ENVIRONMENT: "Production"
+      INDEXER_DB_HOST: indexer-db
+      INDEXER_DB_PORT: 5432
+      INDEXER_DB_NAME: ${INDEXER_DB_NAME}
+      INDEXER_DB_USER: ${INDEXER_DB_USER}
+      INDEXER_DB_PASSWORD: ${INDEXER_DB_PASSWORD}
+      RABBITMQ_HOST: searc-rabbitmq
+      RABBITMQ_PORT: ${RABBITMQ_PORT}
+      RABBITMQ_USER: ${RABBITMQ_USER}
+      RABBITMQ_PASS: ${RABBITMQ_PASS}
+      SEQ_URL: http://seq:5341
+      ZIPKIN_URL: http://zipkin:9411/api/v2/spans
+    networks:
+      - searc-network
+    restart: no
+    
 networks:
   searc-network:
     driver: bridge
 
 volumes:
   postgres_data:
+  cleaner_postgres_data:
+  indexer_postgres_data:  
