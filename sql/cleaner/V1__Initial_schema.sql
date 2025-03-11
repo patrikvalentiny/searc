@@ -1,0 +1,10 @@
+CREATE SCHEMA IF NOT EXISTS cleaner;
+
+CREATE TABLE IF NOT EXISTS cleaner.file_details (
+    id SERIAL PRIMARY KEY,
+    file_name VARCHAR(255) NOT NULL,
+    relative_path VARCHAR(255) NOT NULL,
+    full_file_path VARCHAR(255) NOT NULL,
+    indexed BOOLEAN NOT NULL DEFAULT FALSE,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
