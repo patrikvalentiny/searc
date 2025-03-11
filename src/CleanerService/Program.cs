@@ -7,6 +7,7 @@ using Monitoring;
 
 HostApplicationBuilder builder = Host.CreateApplicationBuilder(args);
 var env = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Development";
+Console.WriteLine($"Environment: {env}");
 var seqUrl = Environment.GetEnvironmentVariable("SEQ_URL") ?? "http://localhost:5341";
 var zipkinUrl = Environment.GetEnvironmentVariable("ZIPKIN_URL") ?? "http://localhost:9411/api/v2/spans";
 if (env == "Development")
@@ -18,21 +19,34 @@ if (env == "Development")
 MonitoringService.SetupSerilog(seqUrl);
 MonitoringService.SetupTracing(zipkinUrl);
 
-var bus = RabbitHutch.CreateBus("host=localhost");
+// Get RabbitMQ connection from environment or default to localhost for development
+var rabbitHost = Environment.GetEnvironmentVariable("RABBITMQ_HOST") ?? "localhost";
+Console.WriteLine($"Connecting to RabbitMQ at: {rabbitHost}");
+var bus = RabbitHutch.CreateBus($"host={rabbitHost}");
 builder.Services.AddSingleton(bus);
+
 builder.Services.AddHostedService<CleanedFileHandler>();
 builder.Services.AddSingleton<CleanedMessagePublisher>();
-
+var connectionString = @$"
+    Host={Environment.GetEnvironmentVariable("DB_CLEANER_HOST")};
+    Port={Environment.GetEnvironmentVariable("DB_CLEANER_PORT")};
+    Database={Environment.GetEnvironmentVariable("DB_CLEANER_NAME")};
+    Username={Environment.GetEnvironmentVariable("DB_CLEANER_USER")};
+    Password={Environment.GetEnvironmentVariable("DB_CLEANER_PASSWORD")}";
+builder.Services.AddNpgsqlDataSource(connectionString);
 using IHost host = builder.Build();
 
 host.Start();
-using (MonitoringService.ActivitySource.StartActivity("CleanerService")){
-var messagePublisher = host.Services.GetRequiredService<CleanedMessagePublisher>();
-var cleanerService = new CleanerService.Application.Services.CleanerService(messagePublisher);
-Console.WriteLine("Enter relative path to clean files (e.g. 'files/to/clean'):");
-var relativePath = Console.ReadLine();
-var cleanedFiles = await cleanerService.CleanFilesAsync(relativePath ?? "../../data");
-await cleanerService.PublishCleanedFilesAsync(cleanedFiles);
+using (MonitoringService.ActivitySource.StartActivity("CleanerService"))
+{
+    var messagePublisher = host.Services.GetRequiredService<CleanedMessagePublisher>();
+    var cleanerService = new CleanerService.Application.Services.CleanerService(messagePublisher);
+    
+    var relativePath = Environment.GetEnvironmentVariable("APP_DATA_PATH") ?? "../../data";
+    Console.WriteLine($"Using data path: {relativePath}");
+    var cleanedFiles = await cleanerService.CleanFilesAsync(relativePath);
+    await cleanerService.PublishCleanedFilesAsync(cleanedFiles);
 }
-Console.ReadLine();
+await host.WaitForShutdownAsync();
+Console.WriteLine("Shutting down cleanly...");
 await MonitoringService.Dispose();

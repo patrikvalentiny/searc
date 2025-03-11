@@ -12,7 +12,7 @@ public class CleanedFileHandler(IBus bus) : BackgroundService
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         Log.Debug("Starting CleanedFileHandler");
-        var subscriptionResult = await bus.PubSub.SubscribeAsync<CleanedFileDTO>("CleanedFile", async message =>
+        await bus.PubSub.SubscribeAsync<CleanedFileDTO>("CleanedFile", async message =>
         {
             Log.Logger.Information("Received message from RabbitMQ");
             var propagator = new TraceContextPropagator();
@@ -20,8 +20,10 @@ public class CleanedFileHandler(IBus bus) : BackgroundService
             var context = propagator.Extract(default, headers,  (r, key) => [r.ContainsKey(key) ? r[key].ToString() : string.Empty]).ActivityContext;
             using var activity = MonitoringService.ActivitySource.StartActivity("CleanerService.CleanedFileHandler", ActivityKind.Consumer, context);
             await Task.CompletedTask;
-        }, cancellationToken: stoppingToken);
+        }, cancellationToken: stoppingToken).AsTask();
 
+        Log.Debug("Subscribed to RabbitMQ");
+        
         while (!stoppingToken.IsCancellationRequested)
         {
             await Task.Delay(1000, stoppingToken);
