@@ -20,6 +20,29 @@ services:
       timeout: 5s
       retries: 5
       start_period: 10s
+  
+  # Indexer Postgres    
+  indexer-postgres:
+    image: postgres:latest
+    container_name: indexer-db
+    hostname: indexer-db
+    environment:
+      POSTGRES_USER: ${INDEXER_DB_USER}
+      POSTGRES_PASSWORD: ${INDEXER_DB_PASSWORD}
+      POSTGRES_DB: ${INDEXER_DB_NAME}
+    ports:
+      - "${INDEXER_DB_PORT}:5432"
+    volumes:
+      - indexer_postgres_data:/var/lib/postgresql/data
+    networks:
+      - searc-network
+    restart: unless-stopped
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${INDEXER_DB_USER} -d ${INDEXER_DB_NAME}" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
 
   searc-rabbitmq:
     image: rabbitmq:3-management
@@ -39,6 +62,7 @@ services:
       timeout: 10s
       retries: 5
       start_period: 40s
+      
   searc:
     build:
       context: .
@@ -64,7 +88,6 @@ services:
       DB_PASSWORD: ${DB_PASSWORD}
       SEQ_URL: http://seq:5341
       ZIPKIN_URL: http://zipkin:9411/api/v2/spans
-      
     networks:
       - searc-network
     restart: unless-stopped
@@ -74,10 +97,6 @@ services:
       context: .
       dockerfile: src/CleanerService/Dockerfile
     depends_on:
-      cleaner-postgres:
-        condition: service_healthy
-      flyway-cleaner:
-        condition: service_completed_successfully
       searc-rabbitmq:
         condition: service_healthy
     environment:
@@ -135,7 +154,7 @@ services:
     volumes:
       - ./sql/search:/flyway/sql
     environment:
-      FLYWAY_URL: jdbc:postgresql://searc-db:${DB_PORT}/${DB_NAME}
+      FLYWAY_URL: jdbc:postgresql://searc-db:5432/${DB_NAME}
       FLYWAY_USER: ${DB_USER}
       FLYWAY_PASSWORD: ${DB_PASSWORD}
       FLYWAY_SCHEMAS: public
@@ -161,24 +180,6 @@ services:
       FLYWAY_CONNECT_RETRIES: 50
     depends_on:
       indexer-postgres:
-        condition: service_healthy
-    networks:
-      - searc-network
-
-  flyway-cleaner:
-    image: flyway/flyway:latest
-    command: >
-      migrate
-    volumes:
-      - ./sql/cleaner:/flyway/sql
-    environment:
-      FLYWAY_URL: jdbc:postgresql://cleaner-db:5432/${DB_CLEANER_NAME}
-      FLYWAY_USER: ${DB_CLEANER_USER}
-      FLYWAY_PASSWORD: ${DB_CLEANER_PASSWORD}
-      FLYWAY_SCHEMAS: public
-      FLYWAY_CONNECT_RETRIES: 50
-    depends_on:
-      cleaner-postgres:
         condition: service_healthy
     networks:
       - searc-network
@@ -213,6 +214,22 @@ services:
     networks:
       - searc-network
     restart: no
+
+  # Frontend Service
+  frontend:
+    build:
+      context: .
+      dockerfile: src/frontend/Dockerfile
+    container_name: searc-frontend
+    environment:
+      - VITE_API_BASE_URL=http://searc:8080
+    ports:
+      - "8000:8000"
+    depends_on:
+      - searc
+    networks:
+      - searc-network
+    restart: unless-stopped
     
 networks:
   searc-network:
@@ -220,4 +237,4 @@ networks:
 
 volumes:
   postgres_data:
-  indexer_postgres_data:  
+  indexer_postgres_data:

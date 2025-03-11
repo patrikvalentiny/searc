@@ -4,6 +4,7 @@ using Monitoring;
 using Scalar.AspNetCore;
 using Searc.SearchApi.Repositories;
 using Searc.SearchApi.Services;
+using SearchApi.Handlers;
 
 
 var env = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Development";
@@ -64,13 +65,14 @@ builder.Services.AddSingleton(bus);
 // Add services to the container.
 builder.Services.AddSingleton<ISearchService, SearchService>();
 builder.Services.AddSingleton<ISearchRepository, SearchRepository>();
+builder.Services.AddHostedService<IndexedFileDTOHandler>();
 
 var app = builder.Build();
+app.UseCors("DevCorsPolicy");
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
-    app.UseCors("DevCorsPolicy");
     app.MapOpenApi();
     app.MapScalarApiReference();
 }

@@ -20,6 +20,7 @@ public class IndexedFileDTOHandler(IBus bus, ISearchService service) : Backgroun
             var context = propagator.Extract(default, headers,  (r, key) => [r.ContainsKey(key) ? r[key].ToString() : string.Empty]).ActivityContext;
             using var activity = MonitoringService.ActivitySource.StartActivity("CleanedFileHandler", ActivityKind.Consumer, context);
             Log.Logger.Information("Received IndexedFileDTO from RabbitMQ");
+            await service.AddIndexFile(message);
             await Task.CompletedTask;
         });
 

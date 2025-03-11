@@ -23,15 +23,26 @@ public class CleanerService(CleanedMessagePublisher messagePublisher)
 
     private async Task<CleanedFileDTO> CleanFileAsync(string path) {
         using var activity = MonitoringService.ActivitySource.StartActivity("CleanerService.CleanFileAsync");
-        var message = await MimeMessage.LoadAsync(path);
-        var cleanedContent = message.TextBody;
-        var filename = Path.GetFileName(path);
-        var pathParts = Path.GetDirectoryName(path)!.Split(Path.DirectorySeparatorChar);
-        var dataIndex = Array.IndexOf(pathParts, "data");
-        var parentFolder = string.Join("_", pathParts.Skip(dataIndex + 1));
-        var cleanedFilename = $"{parentFolder}_{filename[..^1]}.txt";
-        Log.Logger.Information("Cleaning file {Filename}", cleanedFilename);
-        return new CleanedFileDTO { Filename = cleanedFilename, Content = cleanedContent };
+        
+        try {
+            var message = await MimeMessage.LoadAsync(path);
+            var cleanedContent = message.TextBody;
+            var filename = Path.GetFileName(path);
+            var pathParts = Path.GetDirectoryName(path)!.Split(Path.DirectorySeparatorChar);
+            var dataIndex = Array.IndexOf(pathParts, "data");
+            var parentFolder = string.Join("_", pathParts.Skip(dataIndex + 1));
+            var cleanedFilename = $"{parentFolder}_{filename[..^1]}.txt";
+            Log.Logger.Information("Cleaning file {Filename}", cleanedFilename);
+            var cleanedFile = new CleanedFileDTO { Filename = cleanedFilename, Content = cleanedContent };
+            if (!string.IsNullOrWhiteSpace(cleanedContent)) {
+                await messagePublisher!.PublishCleanedMessage(cleanedFile);
+            }
+            return cleanedFile;
+        } 
+        catch (Exception ex) {
+            Log.Logger.Error("Skipping file {Path} due to error: {ErrorMessage}", path, ex.Message);
+            throw;
+        }
     }
 
     public async Task PublishCleanedFilesAsync(IEnumerable<CleanedFileDTO> cleanedFiles) {

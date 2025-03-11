@@ -48,10 +48,6 @@ builder.Services.AddHostedService<IndexedFileHandler>();
 using IHost host = builder.Build();
 
 host.Start();
-using (MonitoringService.ActivitySource.StartActivity("IndexerService"))
-{
-    Console.WriteLine("IndexerService is running and waiting for messages...");
-}
 
 // Wait for shutdown signal
 await host.WaitForShutdownAsync();
