@@ -21,7 +21,7 @@ public class IndexerService(IIndexerRepository repository, IndexedMessagePublish
         var fileId = await repository.InsertFileAsync(cleanedFile.Filename, System.Text.Encoding.UTF8.GetBytes(cleanedFile.Content));
 
         var wordCounts = cleanedFile.Content
-            .Split(new[] { ' ', '\n', '\r', '.', ',', '!', '?' }, StringSplitOptions.RemoveEmptyEntries)
+            .Split([' ', '\n', '\r', '.', ',', '!', '?'], StringSplitOptions.RemoveEmptyEntries)
             .GroupBy(word => word.ToLower())
             .ToDictionary(group => group.Key, group => group.Count());
 

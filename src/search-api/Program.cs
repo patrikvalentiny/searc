@@ -43,9 +43,9 @@ var connectionString = @$"
     Database={Environment.GetEnvironmentVariable("DB_NAME")};
     Username={Environment.GetEnvironmentVariable("DB_USER")};
     Password={Environment.GetEnvironmentVariable("DB_PASSWORD")};
-    Max Pool Size=200;
+    MaxPoolSize=200;
     Timeout=30;
-    Connection Lifetime=300;
+    ConnectionLifetime=300;
     Pooling=true
 ";
 builder.Services.AddNpgsqlDataSource(connectionString);

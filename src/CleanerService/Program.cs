@@ -35,16 +35,15 @@ builder.Services.AddNpgsqlDataSource(connectionString);
 using IHost host = builder.Build();
 
 host.Start();
-using (MonitoringService.ActivitySource.StartActivity("CleaningFiles"))
-{
-    var messagePublisher = host.Services.GetRequiredService<CleanedMessagePublisher>();
-    var cleanerService = new CleanerService.Application.Services.CleanerService(messagePublisher);
-    
-    var relativePath = Environment.GetEnvironmentVariable("APP_DATA_PATH") ?? "../../data";
-    Console.WriteLine($"Using data path: {relativePath}");
-    var cleanedFiles = await cleanerService.CleanFilesAsync(relativePath);
-    // await cleanerService.PublishCleanedFilesAsync(cleanedFiles);
-}
+
+var messagePublisher = host.Services.GetRequiredService<CleanedMessagePublisher>();
+var cleanerService = new CleanerService.Application.Services.CleanerService(messagePublisher);
+
+var relativePath = Environment.GetEnvironmentVariable("APP_DATA_PATH") ?? "../../data";
+Console.WriteLine($"Using data path: {relativePath}");
+await cleanerService.CleanFilesAsync(relativePath);
+// await cleanerService.PublishCleanedFilesAsync(cleanedFiles);
+
 await host.WaitForShutdownAsync();
 Console.WriteLine("Shutting down cleanly...");
 await MonitoringService.Dispose();

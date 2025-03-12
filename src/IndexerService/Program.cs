@@ -34,10 +34,10 @@ var connectionString = @$"
     Port={Environment.GetEnvironmentVariable("INDEXER_DB_PORT") ?? "5432"};
     Database={Environment.GetEnvironmentVariable("INDEXER_DB_NAME")};
     Username={Environment.GetEnvironmentVariable("INDEXER_DB_USER")};
-    Password={Environment.GetEnvironmentVariable("INDEXER_DB_PASSWORD")}
-    Max Pool Size=200;
+    Password={Environment.GetEnvironmentVariable("INDEXER_DB_PASSWORD")};
+    MaxPoolSize=200;
     Timeout=30;
-    Connection Lifetime=300;
+    ConnectionLifetime=300;
     Pooling=true";
 builder.Services.AddNpgsqlDataSource(connectionString);
 
