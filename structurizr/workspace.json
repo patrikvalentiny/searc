@@ -4,7 +4,7 @@
   "documentation" : { },
   "id" : 1,
   "lastModifiedAgent" : "structurizr-ui",
-  "lastModifiedDate" : "2025-03-04T12:28:35Z",
+  "lastModifiedDate" : "2025-03-12T23:36:23Z",
   "model" : {
     "people" : [ {
       "description" : "A user who searches and downloads emails.",
@@ -16,78 +16,34 @@
       },
       "relationships" : [ {
         "description" : "Searches emails",
-        "destinationId" : "25",
-        "id" : "43",
+        "destinationId" : "21",
+        "id" : "22",
         "sourceId" : "1",
         "tags" : "Relationship"
       }, {
         "description" : "Searches emails",
         "destinationId" : "3",
-        "id" : "44",
-        "linkedRelationshipId" : "43",
+        "id" : "23",
+        "linkedRelationshipId" : "22",
         "sourceId" : "1"
       } ],
       "tags" : "Element,Person"
     } ],
     "softwareSystems" : [ {
-      "description" : "Stores the raw Enron dataset.",
+      "description" : "Stores the raw Enron dataset in text files.",
       "documentation" : { },
       "id" : "2",
       "location" : "Unspecified",
-      "name" : "Local Filesystem",
+      "name" : "Raw Email Data (Filesystem)",
       "properties" : {
         "structurizr.dsl.identifier" : "filesystem"
       },
       "tags" : "Element,Software System"
     }, {
       "containers" : [ {
-        "description" : "Handles asynchronous communication between cleaner and indexer services.",
+        "description" : "Stores searchable indexed email data.",
         "documentation" : { },
         "id" : "4",
-        "name" : "Email Queue",
-        "properties" : {
-          "structurizr.dsl.identifier" : "enronsystem.messagebus"
-        },
-        "relationships" : [ {
-          "description" : "Delivers cleaned emails",
-          "destinationId" : "12",
-          "id" : "59",
-          "sourceId" : "4",
-          "tags" : "Relationship"
-        } ],
-        "tags" : "Element,Container,Queue",
-        "technology" : "RabbitMQ"
-      }, {
-        "description" : "Handles asynchronous communication between indexer and data API services.",
-        "documentation" : { },
-        "id" : "5",
-        "name" : "Index Data Queue",
-        "properties" : {
-          "structurizr.dsl.identifier" : "enronsystem.indexdataqueue"
-        },
-        "relationships" : [ {
-          "description" : "Delivers indexed data",
-          "destinationId" : "18",
-          "id" : "62",
-          "sourceId" : "5",
-          "tags" : "Relationship"
-        } ],
-        "tags" : "Element,Container,Queue",
-        "technology" : "RabbitMQ"
-      }, {
-        "description" : "Stores indexed email data.",
-        "documentation" : { },
-        "id" : "6",
-        "name" : "Index Database",
-        "properties" : {
-          "structurizr.dsl.identifier" : "enronsystem.indexdatabase"
-        },
-        "tags" : "Element,Container,Database",
-        "technology" : "PostgreSQL"
-      }, {
-        "description" : "Stores email data optimized for search queries.",
-        "documentation" : { },
-        "id" : "7",
         "name" : "Search Database",
         "properties" : {
           "structurizr.dsl.identifier" : "enronsystem.searchdatabase"
@@ -95,65 +51,78 @@
         "tags" : "Element,Container,Database",
         "technology" : "PostgreSQL"
       }, {
+        "description" : "Stores indexed words, occurrences, and file references.",
+        "documentation" : { },
+        "id" : "5",
+        "name" : "Indexer Database",
+        "properties" : {
+          "structurizr.dsl.identifier" : "enronsystem.indexdatabase"
+        },
+        "tags" : "Element,Container,Database",
+        "technology" : "PostgreSQL"
+      }, {
+        "description" : "Message queue for cleaned emails from Cleaner to Indexer.",
+        "documentation" : { },
+        "id" : "6",
+        "name" : "Cleaned Email Queue",
+        "properties" : {
+          "structurizr.dsl.identifier" : "enronsystem.cleanedqueue"
+        },
+        "tags" : "Element,Container,Queue",
+        "technology" : "RabbitMQ"
+      }, {
+        "description" : "Message queue for indexed data from Indexer to Search API.",
+        "documentation" : { },
+        "id" : "7",
+        "name" : "Indexed Data Queue",
+        "properties" : {
+          "structurizr.dsl.identifier" : "enronsystem.indexedqueue"
+        },
+        "tags" : "Element,Container,Queue",
+        "technology" : "RabbitMQ"
+      }, {
         "components" : [ {
-          "description" : "Reads raw email files from the filesystem",
+          "description" : "Processes and cleans raw email files.",
           "documentation" : { },
           "id" : "9",
-          "name" : "EmailReader",
+          "name" : "CleanerService",
           "properties" : {
-            "structurizr.dsl.identifier" : "enronsystem.cleaner.emailreader"
+            "structurizr.dsl.identifier" : "enronsystem.cleaner.cleanerservice"
           },
           "relationships" : [ {
-            "description" : "Passes raw emails to",
-            "destinationId" : "10",
-            "id" : "29",
+            "description" : "Reads raw emails",
+            "destinationId" : "2",
+            "id" : "26",
             "sourceId" : "9",
             "tags" : "Relationship"
           }, {
-            "description" : "Reads raw emails from",
-            "destinationId" : "2",
-            "id" : "47",
+            "description" : "Publishes cleaned emails",
+            "destinationId" : "6",
+            "id" : "29",
             "sourceId" : "9",
             "tags" : "Relationship"
           } ],
           "tags" : "Element,Component",
-          "technology" : "C# File I/O"
+          "technology" : "C# Service"
         }, {
-          "description" : "Removes headers and normalizes email content",
+          "description" : "Publishes cleaned emails to RabbitMQ with topic 'CleanedFile'.",
           "documentation" : { },
           "id" : "10",
-          "name" : "ContentCleaner",
-          "properties" : {
-            "structurizr.dsl.identifier" : "enronsystem.cleaner.contentcleaner"
-          },
-          "relationships" : [ {
-            "description" : "Sends cleaned content to",
-            "destinationId" : "11",
-            "id" : "30",
-            "sourceId" : "10",
-            "tags" : "Relationship"
-          } ],
-          "tags" : "Element,Component",
-          "technology" : "C# Text Processing"
-        }, {
-          "description" : "Publishes cleaned emails to the message queue",
-          "documentation" : { },
-          "id" : "11",
-          "name" : "MessagePublisher",
+          "name" : "CleanedMessagePublisher",
           "properties" : {
             "structurizr.dsl.identifier" : "enronsystem.cleaner.messagepublisher"
           },
           "relationships" : [ {
-            "description" : "Publishes messages to",
-            "destinationId" : "4",
-            "id" : "50",
-            "sourceId" : "11",
+            "description" : "Publishes messages",
+            "destinationId" : "6",
+            "id" : "31",
+            "sourceId" : "10",
             "tags" : "Relationship"
           } ],
           "tags" : "Element,Component",
-          "technology" : "RabbitMQ Client"
+          "technology" : "EasyNetQ"
         } ],
-        "description" : "Processes raw emails from the dataset, removes headers, and forwards cleaned content.",
+        "description" : "Removes headers from raw emails and publishes cleaned content.",
         "documentation" : { },
         "id" : "8",
         "name" : "Cleaner Service",
@@ -161,351 +130,206 @@
           "structurizr.dsl.identifier" : "enronsystem.cleaner"
         },
         "relationships" : [ {
-          "description" : "Reads raw emails from",
+          "description" : "Reads raw emails",
           "destinationId" : "2",
-          "id" : "48",
-          "linkedRelationshipId" : "47",
-          "sourceId" : "8"
-        }, {
-          "description" : "Publishes messages to",
-          "destinationId" : "4",
-          "id" : "51",
-          "linkedRelationshipId" : "50",
+          "id" : "27",
+          "linkedRelationshipId" : "26",
           "sourceId" : "8"
         }, {
           "description" : "Publishes cleaned emails",
-          "destinationId" : "4",
-          "id" : "58",
-          "sourceId" : "8",
-          "tags" : "Relationship"
+          "destinationId" : "6",
+          "id" : "30",
+          "linkedRelationshipId" : "29",
+          "sourceId" : "8"
         } ],
         "tags" : "Element,Container",
         "technology" : ".NET Worker Service"
       }, {
         "components" : [ {
-          "description" : "Consumes cleaned email messages from the queue",
+          "description" : "Processes cleaned emails and indexes words.",
           "documentation" : { },
-          "id" : "13",
-          "name" : "MessageConsumer",
+          "id" : "12",
+          "name" : "IndexerService",
           "properties" : {
-            "structurizr.dsl.identifier" : "enronsystem.indexer.messageconsumer"
+            "structurizr.dsl.identifier" : "enronsystem.indexer.indexerservice"
           },
           "relationships" : [ {
-            "description" : "Passes cleaned emails to",
-            "destinationId" : "14",
-            "id" : "31",
-            "sourceId" : "13",
-            "tags" : "Relationship"
-          }, {
-            "description" : "Consumes messages from",
-            "destinationId" : "4",
-            "id" : "52",
-            "sourceId" : "13",
+            "description" : "Stores indexed words, occurrences, and files",
+            "destinationId" : "5",
+            "id" : "34",
+            "sourceId" : "12",
             "tags" : "Relationship"
           } ],
           "tags" : "Element,Component",
-          "technology" : "RabbitMQ Client"
+          "technology" : "C# Service"
         }, {
-          "description" : "Parses email content into structured data",
+          "description" : "Handles database operations for indexing words, occurrences, and files.",
+          "documentation" : { },
+          "id" : "13",
+          "name" : "IndexerRepository",
+          "properties" : {
+            "structurizr.dsl.identifier" : "enronsystem.indexer.repository"
+          },
+          "tags" : "Element,Component",
+          "technology" : "Dapper + PostgreSQL"
+        }, {
+          "description" : "Consumes cleaned email messages and triggers indexing.",
           "documentation" : { },
           "id" : "14",
-          "name" : "EmailParser",
+          "name" : "IndexedFileHandler",
           "properties" : {
-            "structurizr.dsl.identifier" : "enronsystem.indexer.emailparser"
+            "structurizr.dsl.identifier" : "enronsystem.indexer.messagehandler"
           },
           "relationships" : [ {
-            "description" : "Sends parsed data to",
-            "destinationId" : "15",
+            "description" : "Consumes cleaned emails",
+            "destinationId" : "6",
             "id" : "32",
             "sourceId" : "14",
             "tags" : "Relationship"
           } ],
           "tags" : "Element,Component",
-          "technology" : "C# Text Processing"
+          "technology" : "EasyNetQ"
         }, {
-          "description" : "Writes parsed data to the index database",
+          "description" : "Publishes indexed email data to RabbitMQ.",
           "documentation" : { },
           "id" : "15",
-          "name" : "IndexWriter",
+          "name" : "IndexedMessagePublisher",
           "properties" : {
-            "structurizr.dsl.identifier" : "enronsystem.indexer.indexwriter"
+            "structurizr.dsl.identifier" : "enronsystem.indexer.messagepublisher"
           },
           "relationships" : [ {
-            "description" : "Sends indexed data to",
-            "destinationId" : "16",
-            "id" : "33",
-            "sourceId" : "15",
-            "tags" : "Relationship"
-          }, {
-            "description" : "Writes indexed data to",
-            "destinationId" : "6",
-            "id" : "54",
+            "description" : "Publishes indexed data",
+            "destinationId" : "7",
+            "id" : "36",
             "sourceId" : "15",
             "tags" : "Relationship"
           } ],
           "tags" : "Element,Component",
-          "technology" : "Entity Framework Core"
-        }, {
-          "description" : "Publishes indexed data to the Index Data Queue",
-          "documentation" : { },
-          "id" : "16",
-          "name" : "DataPublisher",
-          "properties" : {
-            "structurizr.dsl.identifier" : "enronsystem.indexer.datapublisher"
-          },
-          "relationships" : [ {
-            "description" : "Publishes indexed data to",
-            "destinationId" : "5",
-            "id" : "56",
-            "sourceId" : "16",
-            "tags" : "Relationship"
-          } ],
-          "tags" : "Element,Component",
-          "technology" : "RabbitMQ Client"
-        }, {
-          "description" : "Exports indexed data to the Database API",
-          "documentation" : { },
-          "id" : "17",
-          "name" : "DataExporter",
-          "properties" : {
-            "structurizr.dsl.identifier" : "enronsystem.indexer.dataexporter"
-          },
-          "tags" : "Element,Component",
-          "technology" : "HTTP Client"
+          "technology" : "EasyNetQ"
         } ],
         "description" : "Indexes cleaned emails into the database.",
         "documentation" : { },
-        "id" : "12",
+        "id" : "11",
         "name" : "Indexer Service",
         "properties" : {
           "structurizr.dsl.identifier" : "enronsystem.indexer"
         },
         "relationships" : [ {
-          "description" : "Consumes messages from",
-          "destinationId" : "4",
-          "id" : "53",
-          "linkedRelationshipId" : "52",
-          "sourceId" : "12"
-        }, {
-          "description" : "Writes indexed data to",
+          "description" : "Consumes cleaned emails",
           "destinationId" : "6",
-          "id" : "55",
-          "linkedRelationshipId" : "54",
-          "sourceId" : "12"
+          "id" : "33",
+          "linkedRelationshipId" : "32",
+          "sourceId" : "11"
         }, {
-          "description" : "Publishes indexed data to",
+          "description" : "Stores indexed words, occurrences, and files",
           "destinationId" : "5",
-          "id" : "57",
-          "linkedRelationshipId" : "56",
-          "sourceId" : "12"
-        }, {
-          "description" : "Stores indexed emails",
-          "destinationId" : "6",
-          "id" : "60",
-          "sourceId" : "12",
-          "tags" : "Relationship"
+          "id" : "35",
+          "linkedRelationshipId" : "34",
+          "sourceId" : "11"
         }, {
           "description" : "Publishes indexed data",
-          "destinationId" : "5",
-          "id" : "61",
-          "sourceId" : "12",
-          "tags" : "Relationship"
+          "destinationId" : "7",
+          "id" : "37",
+          "linkedRelationshipId" : "36",
+          "sourceId" : "11"
         } ],
         "tags" : "Element,Container",
         "technology" : ".NET Worker Service"
       }, {
         "components" : [ {
-          "description" : "Consumes indexed data messages from the queue",
+          "description" : "Processes search requests from the frontend.",
           "documentation" : { },
-          "id" : "19",
-          "name" : "DataConsumer",
+          "id" : "17",
+          "name" : "SearchController",
           "properties" : {
-            "structurizr.dsl.identifier" : "enronsystem.dataapi.dataconsumer"
+            "structurizr.dsl.identifier" : "enronsystem.searchapi.searchcontroller"
+          },
+          "tags" : "Element,Component",
+          "technology" : "C# Controller"
+        }, {
+          "description" : "Handles search logic and interacts with the repository.",
+          "documentation" : { },
+          "id" : "18",
+          "name" : "SearchService",
+          "properties" : {
+            "structurizr.dsl.identifier" : "enronsystem.searchapi.searchservice"
           },
           "relationships" : [ {
-            "description" : "Consumes messages from",
-            "destinationId" : "5",
-            "id" : "34",
-            "sourceId" : "19",
-            "tags" : "Relationship"
-          }, {
-            "description" : "Passes indexed data to",
-            "destinationId" : "20",
-            "id" : "36",
-            "sourceId" : "19",
+            "description" : "Updates search data",
+            "destinationId" : "4",
+            "id" : "40",
+            "sourceId" : "18",
             "tags" : "Relationship"
           } ],
           "tags" : "Element,Component",
-          "technology" : "RabbitMQ Client"
+          "technology" : "C# Service"
         }, {
-          "description" : "Manages data transfer between databases",
+          "description" : "Performs database queries for search operations.",
+          "documentation" : { },
+          "id" : "19",
+          "name" : "SearchRepository",
+          "properties" : {
+            "structurizr.dsl.identifier" : "enronsystem.searchapi.searchrepository"
+          },
+          "tags" : "Element,Component",
+          "technology" : "Dapper + PostgreSQL"
+        }, {
+          "description" : "Consumes indexed email data and updates the search database.",
           "documentation" : { },
           "id" : "20",
-          "name" : "DataTransferService",
+          "name" : "IndexedFileDTOHandler",
           "properties" : {
-            "structurizr.dsl.identifier" : "enronsystem.dataapi.datatransferservice"
+            "structurizr.dsl.identifier" : "enronsystem.searchapi.indexedfilehandler"
           },
           "relationships" : [ {
-            "description" : "Uses",
-            "destinationId" : "21",
-            "id" : "37",
-            "sourceId" : "20",
-            "tags" : "Relationship"
-          }, {
-            "description" : "Writes transformed data to",
+            "description" : "Consumes indexed data",
             "destinationId" : "7",
             "id" : "38",
             "sourceId" : "20",
             "tags" : "Relationship"
           } ],
           "tags" : "Element,Component",
-          "technology" : "C# Service"
-        }, {
-          "description" : "Maps data between different database schemas",
-          "documentation" : { },
-          "id" : "21",
-          "name" : "DataMapperService",
-          "properties" : {
-            "structurizr.dsl.identifier" : "enronsystem.dataapi.datamapperservice"
-          },
-          "tags" : "Element,Component",
-          "technology" : "AutoMapper"
+          "technology" : "EasyNetQ"
         } ],
-        "description" : "Processes indexed data and updates search database.",
+        "description" : "Handles search queries and retrieves results from the database.",
         "documentation" : { },
-        "id" : "18",
-        "name" : "Data API",
+        "id" : "16",
+        "name" : "Search API",
         "properties" : {
-          "structurizr.dsl.identifier" : "enronsystem.dataapi"
+          "structurizr.dsl.identifier" : "enronsystem.searchapi"
         },
         "relationships" : [ {
-          "description" : "Consumes messages from",
-          "destinationId" : "5",
-          "id" : "35",
-          "linkedRelationshipId" : "34",
-          "sourceId" : "18"
+          "description" : "Retrieves search results",
+          "destinationId" : "4",
+          "id" : "25",
+          "sourceId" : "16",
+          "tags" : "Relationship"
         }, {
-          "description" : "Writes transformed data to",
+          "description" : "Consumes indexed data",
           "destinationId" : "7",
           "id" : "39",
           "linkedRelationshipId" : "38",
-          "sourceId" : "18"
-        }, {
-          "description" : "Updates search data",
-          "destinationId" : "7",
-          "id" : "63",
-          "sourceId" : "18",
-          "tags" : "Relationship"
-        } ],
-        "tags" : "Element,Container",
-        "technology" : ".NET Worker Service"
-      }, {
-        "components" : [ {
-          "description" : "Handles search queries from the UI.",
-          "documentation" : { },
-          "id" : "23",
-          "name" : "SearchController",
-          "properties" : {
-            "structurizr.dsl.identifier" : "enronsystem.api.searchcontroller"
-          },
-          "relationships" : [ {
-            "description" : "Uses to perform search",
-            "destinationId" : "24",
-            "id" : "40",
-            "sourceId" : "23",
-            "tags" : "Relationship"
-          } ],
-          "tags" : "Element,Component",
-          "technology" : "ASP.NET Core MVC Controller"
-        }, {
-          "description" : "Encapsulates the search logic and database access.",
-          "documentation" : { },
-          "id" : "24",
-          "name" : "EmailService",
-          "properties" : {
-            "structurizr.dsl.identifier" : "enronsystem.api.emailservice"
-          },
-          "tags" : "Element,Component",
-          "technology" : "C# Service"
-        } ],
-        "description" : "Handles search requests.",
-        "documentation" : { },
-        "id" : "22",
-        "name" : "Search API",
-        "properties" : {
-          "structurizr.dsl.identifier" : "enronsystem.api"
-        },
-        "relationships" : [ {
-          "description" : "Reads email data",
-          "destinationId" : "7",
-          "id" : "46",
-          "sourceId" : "22",
-          "tags" : "Relationship"
+          "sourceId" : "16"
         } ],
         "tags" : "Element,Container",
         "technology" : "ASP.NET Core Web API"
       }, {
-        "components" : [ {
-          "description" : "Displays the search interface",
-          "documentation" : { },
-          "id" : "26",
-          "name" : "SearchPage",
-          "properties" : {
-            "structurizr.dsl.identifier" : "enronsystem.ui.searchpage"
-          },
-          "relationships" : [ {
-            "description" : "Displays",
-            "destinationId" : "27",
-            "id" : "41",
-            "sourceId" : "26",
-            "tags" : "Relationship"
-          } ],
-          "tags" : "Element,Component",
-          "technology" : "Razor Page"
-        }, {
-          "description" : "Displays search results",
-          "documentation" : { },
-          "id" : "27",
-          "name" : "ResultsComponent",
-          "properties" : {
-            "structurizr.dsl.identifier" : "enronsystem.ui.resultscomponent"
-          },
-          "relationships" : [ {
-            "description" : "Navigates to",
-            "destinationId" : "28",
-            "id" : "42",
-            "sourceId" : "27",
-            "tags" : "Relationship"
-          } ],
-          "tags" : "Element,Component",
-          "technology" : "Razor Component"
-        }, {
-          "description" : "Displays individual email content",
-          "documentation" : { },
-          "id" : "28",
-          "name" : "EmailViewComponent",
-          "properties" : {
-            "structurizr.dsl.identifier" : "enronsystem.ui.emailviewcomponent"
-          },
-          "tags" : "Element,Component",
-          "technology" : "Razor Component"
-        } ],
-        "description" : "Allows users to search emails.",
+        "description" : "Allows users to search for emails.",
         "documentation" : { },
-        "id" : "25",
+        "id" : "21",
         "name" : "Web UI",
         "properties" : {
           "structurizr.dsl.identifier" : "enronsystem.ui"
         },
         "relationships" : [ {
-          "description" : "Sends search requests",
-          "destinationId" : "22",
-          "id" : "45",
-          "sourceId" : "25",
+          "description" : "Sends search queries",
+          "destinationId" : "16",
+          "id" : "24",
+          "sourceId" : "21",
           "tags" : "Relationship"
         } ],
         "tags" : "Element,Container",
-        "technology" : "Razor Pages"
+        "technology" : "React + ShadCN"
       } ],
       "description" : "Processes, indexes, and provides search over the Enron email dataset.",
       "documentation" : { },
@@ -516,10 +340,10 @@
         "structurizr.dsl.identifier" : "enronsystem"
       },
       "relationships" : [ {
-        "description" : "Reads raw emails from",
+        "description" : "Reads raw emails",
         "destinationId" : "2",
-        "id" : "49",
-        "linkedRelationshipId" : "47",
+        "id" : "28",
+        "linkedRelationshipId" : "26",
         "sourceId" : "3"
       } ],
       "tags" : "Element,Software System"
@@ -527,7 +351,7 @@
   },
   "name" : "Searc",
   "properties" : {
-    "structurizr.dsl" : "d29ya3NwYWNlICJTZWFyYyIgIkM0IG1vZGVsIG9mIHRoZSBTZWFyYyBlbWFpbCBzZWFyY2ggc3lzdGVtIiB7CgogICAgIWlkZW50aWZpZXJzIGhpZXJhcmNoaWNhbAoKICAgIG1vZGVsIHsKICAgICAgICB1c2VyID0gcGVyc29uICJVc2VyIiB7CiAgICAgICAgICAgIGRlc2NyaXB0aW9uICJBIHVzZXIgd2hvIHNlYXJjaGVzIGFuZCBkb3dubG9hZHMgZW1haWxzLiIKICAgICAgICB9CgogICAgICAgIGZpbGVzeXN0ZW0gPSBzb2Z0d2FyZVN5c3RlbSAiTG9jYWwgRmlsZXN5c3RlbSIgewogICAgICAgICAgICBkZXNjcmlwdGlvbiAiU3RvcmVzIHRoZSByYXcgRW5yb24gZGF0YXNldC4iCiAgICAgICAgfQoKICAgICAgICBlbnJvblN5c3RlbSA9IHNvZnR3YXJlU3lzdGVtICJTZWFyYyBTeXN0ZW0iIHsKICAgICAgICAgICAgZGVzY3JpcHRpb24gIlByb2Nlc3NlcywgaW5kZXhlcywgYW5kIHByb3ZpZGVzIHNlYXJjaCBvdmVyIHRoZSBFbnJvbiBlbWFpbCBkYXRhc2V0LiIKCiAgICAgICAgICAgICMgTWVzc2FnZSBicm9rZXIKICAgICAgICAgICAgbWVzc2FnZUJ1cyA9IGNvbnRhaW5lciAiRW1haWwgUXVldWUiICJSYWJiaXRNUSBtZXNzYWdlIGJ1cyBmb3IgcmF3IGVtYWlscyIgewogICAgICAgICAgICAgICAgZGVzY3JpcHRpb24gIkhhbmRsZXMgYXN5bmNocm9ub3VzIGNvbW11bmljYXRpb24gYmV0d2VlbiBjbGVhbmVyIGFuZCBpbmRleGVyIHNlcnZpY2VzLiIKICAgICAgICAgICAgICAgIHRlY2hub2xvZ3kgIlJhYmJpdE1RIgogICAgICAgICAgICAgICAgdGFncyAiUXVldWUiCiAgICAgICAgICAgIH0KICAgICAgICAgICAgCiAgICAgICAgICAgIGluZGV4RGF0YVF1ZXVlID0gY29udGFpbmVyICJJbmRleCBEYXRhIFF1ZXVlIiAiUmFiYml0TVEgbWVzc2FnZSBidXMgZm9yIGluZGV4ZWQgZGF0YSIgewogICAgICAgICAgICAgICAgZGVzY3JpcHRpb24gIkhhbmRsZXMgYXN5bmNocm9ub3VzIGNvbW11bmljYXRpb24gYmV0d2VlbiBpbmRleGVyIGFuZCBkYXRhIEFQSSBzZXJ2aWNlcy4iCiAgICAgICAgICAgICAgICB0ZWNobm9sb2d5ICJSYWJiaXRNUSIKICAgICAgICAgICAgICAgIHRhZ3MgIlF1ZXVlIgogICAgICAgICAgICB9CiAgICAgICAgICAgIAogICAgICAgICAgICAjIERhdGFiYXNlIGNvbnRhaW5lcnMKICAgICAgICAgICAgaW5kZXhEYXRhYmFzZSA9IGNvbnRhaW5lciAiSW5kZXggRGF0YWJhc2UiIHsKICAgICAgICAgICAgICAgIGRlc2NyaXB0aW9uICJTdG9yZXMgaW5kZXhlZCBlbWFpbCBkYXRhLiIKICAgICAgICAgICAgICAgIHRlY2hub2xvZ3kgIlBvc3RncmVTUUwiCiAgICAgICAgICAgICAgICB0YWdzICJEYXRhYmFzZSIKICAgICAgICAgICAgfQogICAgICAgICAgICAKICAgICAgICAgICAgc2VhcmNoRGF0YWJhc2UgPSBjb250YWluZXIgIlNlYXJjaCBEYXRhYmFzZSIgewogICAgICAgICAgICAgICAgZGVzY3JpcHRpb24gIlN0b3JlcyBlbWFpbCBkYXRhIG9wdGltaXplZCBmb3Igc2VhcmNoIHF1ZXJpZXMuIgogICAgICAgICAgICAgICAgdGVjaG5vbG9neSAiUG9zdGdyZVNRTCIKICAgICAgICAgICAgICAgIHRhZ3MgIkRhdGFiYXNlIgogICAgICAgICAgICB9CgogICAgICAgICAgICAjIFByb2Nlc3Npbmcgc2VydmljZXMKICAgICAgICAgICAgY2xlYW5lciA9IGNvbnRhaW5lciAiQ2xlYW5lciBTZXJ2aWNlIiB7CiAgICAgICAgICAgICAgICBkZXNjcmlwdGlvbiAiUHJvY2Vzc2VzIHJhdyBlbWFpbHMgZnJvbSB0aGUgZGF0YXNldCwgcmVtb3ZlcyBoZWFkZXJzLCBhbmQgZm9yd2FyZHMgY2xlYW5lZCBjb250ZW50LiIKICAgICAgICAgICAgICAgIHRlY2hub2xvZ3kgIi5ORVQgV29ya2VyIFNlcnZpY2UiCiAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgIGVtYWlsUmVhZGVyID0gY29tcG9uZW50ICJFbWFpbFJlYWRlciIgewogICAgICAgICAgICAgICAgICAgIGRlc2NyaXB0aW9uICJSZWFkcyByYXcgZW1haWwgZmlsZXMgZnJvbSB0aGUgZmlsZXN5c3RlbSIKICAgICAgICAgICAgICAgICAgICB0ZWNobm9sb2d5ICJDIyBGaWxlIEkvTyIKICAgICAgICAgICAgICAgIH0KICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgY29udGVudENsZWFuZXIgPSBjb21wb25lbnQgIkNvbnRlbnRDbGVhbmVyIiB7CiAgICAgICAgICAgICAgICAgICAgZGVzY3JpcHRpb24gIlJlbW92ZXMgaGVhZGVycyBhbmQgbm9ybWFsaXplcyBlbWFpbCBjb250ZW50IgogICAgICAgICAgICAgICAgICAgIHRlY2hub2xvZ3kgIkMjIFRleHQgUHJvY2Vzc2luZyIKICAgICAgICAgICAgICAgIH0KICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgbWVzc2FnZVB1Ymxpc2hlciA9IGNvbXBvbmVudCAiTWVzc2FnZVB1Ymxpc2hlciIgewogICAgICAgICAgICAgICAgICAgIGRlc2NyaXB0aW9uICJQdWJsaXNoZXMgY2xlYW5lZCBlbWFpbHMgdG8gdGhlIG1lc3NhZ2UgcXVldWUiCiAgICAgICAgICAgICAgICAgICAgdGVjaG5vbG9neSAiUmFiYml0TVEgQ2xpZW50IgogICAgICAgICAgICAgICAgfQogICAgICAgICAgICB9CgogICAgICAgICAgICBpbmRleGVyID0gY29udGFpbmVyICJJbmRleGVyIFNlcnZpY2UiIHsKICAgICAgICAgICAgICAgIGRlc2NyaXB0aW9uICJJbmRleGVzIGNsZWFuZWQgZW1haWxzIGludG8gdGhlIGRhdGFiYXNlLiIKICAgICAgICAgICAgICAgIHRlY2hub2xvZ3kgIi5ORVQgV29ya2VyIFNlcnZpY2UiCiAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgIG1lc3NhZ2VDb25zdW1lciA9IGNvbXBvbmVudCAiTWVzc2FnZUNvbnN1bWVyIiB7CiAgICAgICAgICAgICAgICAgICAgZGVzY3JpcHRpb24gIkNvbnN1bWVzIGNsZWFuZWQgZW1haWwgbWVzc2FnZXMgZnJvbSB0aGUgcXVldWUiCiAgICAgICAgICAgICAgICAgICAgdGVjaG5vbG9neSAiUmFiYml0TVEgQ2xpZW50IgogICAgICAgICAgICAgICAgfQogICAgICAgICAgICAgICAgCiAgICAgICAgICAgICAgICBlbWFpbFBhcnNlciA9IGNvbXBvbmVudCAiRW1haWxQYXJzZXIiIHsKICAgICAgICAgICAgICAgICAgICBkZXNjcmlwdGlvbiAiUGFyc2VzIGVtYWlsIGNvbnRlbnQgaW50byBzdHJ1Y3R1cmVkIGRhdGEiCiAgICAgICAgICAgICAgICAgICAgdGVjaG5vbG9neSAiQyMgVGV4dCBQcm9jZXNzaW5nIgogICAgICAgICAgICAgICAgfQogICAgICAgICAgICAgICAgCiAgICAgICAgICAgICAgICBpbmRleFdyaXRlciA9IGNvbXBvbmVudCAiSW5kZXhXcml0ZXIiIHsKICAgICAgICAgICAgICAgICAgICBkZXNjcmlwdGlvbiAiV3JpdGVzIHBhcnNlZCBkYXRhIHRvIHRoZSBpbmRleCBkYXRhYmFzZSIKICAgICAgICAgICAgICAgICAgICB0ZWNobm9sb2d5ICJFbnRpdHkgRnJhbWV3b3JrIENvcmUiCiAgICAgICAgICAgICAgICB9CiAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgIGRhdGFQdWJsaXNoZXIgPSBjb21wb25lbnQgIkRhdGFQdWJsaXNoZXIiIHsKICAgICAgICAgICAgICAgICAgICBkZXNjcmlwdGlvbiAiUHVibGlzaGVzIGluZGV4ZWQgZGF0YSB0byB0aGUgSW5kZXggRGF0YSBRdWV1ZSIKICAgICAgICAgICAgICAgICAgICB0ZWNobm9sb2d5ICJSYWJiaXRNUSBDbGllbnQiCiAgICAgICAgICAgICAgICB9CiAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgIGRhdGFFeHBvcnRlciA9IGNvbXBvbmVudCAiRGF0YUV4cG9ydGVyIiB7CiAgICAgICAgICAgICAgICAgICAgZGVzY3JpcHRpb24gIkV4cG9ydHMgaW5kZXhlZCBkYXRhIHRvIHRoZSBEYXRhYmFzZSBBUEkiCiAgICAgICAgICAgICAgICAgICAgdGVjaG5vbG9neSAiSFRUUCBDbGllbnQiCiAgICAgICAgICAgICAgICB9CiAgICAgICAgICAgIH0KCiAgICAgICAgICAgICMgQVBJIHNlcnZpY2VzCiAgICAgICAgICAgIGRhdGFBUEkgPSBjb250YWluZXIgIkRhdGEgQVBJIiB7CiAgICAgICAgICAgICAgICBkZXNjcmlwdGlvbiAiUHJvY2Vzc2VzIGluZGV4ZWQgZGF0YSBhbmQgdXBkYXRlcyBzZWFyY2ggZGF0YWJhc2UuIgogICAgICAgICAgICAgICAgdGVjaG5vbG9neSAiLk5FVCBXb3JrZXIgU2VydmljZSIKICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgZGF0YUNvbnN1bWVyID0gY29tcG9uZW50ICJEYXRhQ29uc3VtZXIiIHsKICAgICAgICAgICAgICAgICAgICBkZXNjcmlwdGlvbiAiQ29uc3VtZXMgaW5kZXhlZCBkYXRhIG1lc3NhZ2VzIGZyb20gdGhlIHF1ZXVlIgogICAgICAgICAgICAgICAgICAgIHRlY2hub2xvZ3kgIlJhYmJpdE1RIENsaWVudCIKICAgICAgICAgICAgICAgIH0KICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgZGF0YVRyYW5zZmVyU2VydmljZSA9IGNvbXBvbmVudCAiRGF0YVRyYW5zZmVyU2VydmljZSIgewogICAgICAgICAgICAgICAgICAgIGRlc2NyaXB0aW9uICJNYW5hZ2VzIGRhdGEgdHJhbnNmZXIgYmV0d2VlbiBkYXRhYmFzZXMiCiAgICAgICAgICAgICAgICAgICAgdGVjaG5vbG9neSAiQyMgU2VydmljZSIKICAgICAgICAgICAgICAgIH0KICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgZGF0YU1hcHBlclNlcnZpY2UgPSBjb21wb25lbnQgIkRhdGFNYXBwZXJTZXJ2aWNlIiB7CiAgICAgICAgICAgICAgICAgICAgZGVzY3JpcHRpb24gIk1hcHMgZGF0YSBiZXR3ZWVuIGRpZmZlcmVudCBkYXRhYmFzZSBzY2hlbWFzIgogICAgICAgICAgICAgICAgICAgIHRlY2hub2xvZ3kgIkF1dG9NYXBwZXIiCiAgICAgICAgICAgICAgICB9CiAgICAgICAgICAgIH0KCiAgICAgICAgICAgIGFwaSA9IGNvbnRhaW5lciAiU2VhcmNoIEFQSSIgewogICAgICAgICAgICAgICAgZGVzY3JpcHRpb24gIkhhbmRsZXMgc2VhcmNoIHJlcXVlc3RzLiIKICAgICAgICAgICAgICAgIHRlY2hub2xvZ3kgIkFTUC5ORVQgQ29yZSBXZWIgQVBJIgoKICAgICAgICAgICAgICAgIHNlYXJjaENvbnRyb2xsZXIgPSBjb21wb25lbnQgIlNlYXJjaENvbnRyb2xsZXIiIHsKICAgICAgICAgICAgICAgICAgICBkZXNjcmlwdGlvbiAiSGFuZGxlcyBzZWFyY2ggcXVlcmllcyBmcm9tIHRoZSBVSS4iCiAgICAgICAgICAgICAgICAgICAgdGVjaG5vbG9neSAiQVNQLk5FVCBDb3JlIE1WQyBDb250cm9sbGVyIgogICAgICAgICAgICAgICAgfQoKICAgICAgICAgICAgICAgIGVtYWlsU2VydmljZSA9IGNvbXBvbmVudCAiRW1haWxTZXJ2aWNlIiB7CiAgICAgICAgICAgICAgICAgICAgZGVzY3JpcHRpb24gIkVuY2Fwc3VsYXRlcyB0aGUgc2VhcmNoIGxvZ2ljIGFuZCBkYXRhYmFzZSBhY2Nlc3MuIgogICAgICAgICAgICAgICAgICAgIHRlY2hub2xvZ3kgIkMjIFNlcnZpY2UiCiAgICAgICAgICAgICAgICB9CiAgICAgICAgICAgIH0KCiAgICAgICAgICAgICMgVXNlciBpbnRlcmZhY2UKICAgICAgICAgICAgdWkgPSBjb250YWluZXIgIldlYiBVSSIgewogICAgICAgICAgICAgICAgZGVzY3JpcHRpb24gIkFsbG93cyB1c2VycyB0byBzZWFyY2ggZW1haWxzLiIKICAgICAgICAgICAgICAgIHRlY2hub2xvZ3kgIlJhem9yIFBhZ2VzIgogICAgICAgICAgICAgICAgCiAgICAgICAgICAgICAgICBzZWFyY2hQYWdlID0gY29tcG9uZW50ICJTZWFyY2hQYWdlIiB7CiAgICAgICAgICAgICAgICAgICAgZGVzY3JpcHRpb24gIkRpc3BsYXlzIHRoZSBzZWFyY2ggaW50ZXJmYWNlIgogICAgICAgICAgICAgICAgICAgIHRlY2hub2xvZ3kgIlJhem9yIFBhZ2UiCiAgICAgICAgICAgICAgICB9CiAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgIHJlc3VsdHNDb21wb25lbnQgPSBjb21wb25lbnQgIlJlc3VsdHNDb21wb25lbnQiIHsKICAgICAgICAgICAgICAgICAgICBkZXNjcmlwdGlvbiAiRGlzcGxheXMgc2VhcmNoIHJlc3VsdHMiCiAgICAgICAgICAgICAgICAgICAgdGVjaG5vbG9neSAiUmF6b3IgQ29tcG9uZW50IgogICAgICAgICAgICAgICAgfQogICAgICAgICAgICAgICAgCiAgICAgICAgICAgICAgICBlbWFpbFZpZXdDb21wb25lbnQgPSBjb21wb25lbnQgIkVtYWlsVmlld0NvbXBvbmVudCIgewogICAgICAgICAgICAgICAgICAgIGRlc2NyaXB0aW9uICJEaXNwbGF5cyBpbmRpdmlkdWFsIGVtYWlsIGNvbnRlbnQiCiAgICAgICAgICAgICAgICAgICAgdGVjaG5vbG9neSAiUmF6b3IgQ29tcG9uZW50IgogICAgICAgICAgICAgICAgfQogICAgICAgICAgICB9CgogICAgICAgICAgICAjIEludGVybmFsIGNvbXBvbmVudCByZWxhdGlvbnNoaXBzCiAgICAgICAgICAgIGNsZWFuZXIuZW1haWxSZWFkZXIgLT4gY2xlYW5lci5jb250ZW50Q2xlYW5lciAiUGFzc2VzIHJhdyBlbWFpbHMgdG8iCiAgICAgICAgICAgIGNsZWFuZXIuY29udGVudENsZWFuZXIgLT4gY2xlYW5lci5tZXNzYWdlUHVibGlzaGVyICJTZW5kcyBjbGVhbmVkIGNvbnRlbnQgdG8iCiAgICAgICAgICAgIAogICAgICAgICAgICBpbmRleGVyLm1lc3NhZ2VDb25zdW1lciAtPiBpbmRleGVyLmVtYWlsUGFyc2VyICJQYXNzZXMgY2xlYW5lZCBlbWFpbHMgdG8iCiAgICAgICAgICAgIGluZGV4ZXIuZW1haWxQYXJzZXIgLT4gaW5kZXhlci5pbmRleFdyaXRlciAiU2VuZHMgcGFyc2VkIGRhdGEgdG8iCiAgICAgICAgICAgIGluZGV4ZXIuaW5kZXhXcml0ZXIgLT4gaW5kZXhlci5kYXRhUHVibGlzaGVyICJTZW5kcyBpbmRleGVkIGRhdGEgdG8iCiAgICAgICAgICAgIAogICAgICAgICAgICBkYXRhQVBJLmRhdGFDb25zdW1lciAtPiBpbmRleERhdGFRdWV1ZSAiQ29uc3VtZXMgbWVzc2FnZXMgZnJvbSIKICAgICAgICAgICAgZGF0YUFQSS5kYXRhQ29uc3VtZXIgLT4gZGF0YUFQSS5kYXRhVHJhbnNmZXJTZXJ2aWNlICJQYXNzZXMgaW5kZXhlZCBkYXRhIHRvIgogICAgICAgICAgICBkYXRhQVBJLmRhdGFUcmFuc2ZlclNlcnZpY2UgLT4gZGF0YUFQSS5kYXRhTWFwcGVyU2VydmljZSAiVXNlcyIKICAgICAgICAgICAgZGF0YUFQSS5kYXRhVHJhbnNmZXJTZXJ2aWNlIC0+IHNlYXJjaERhdGFiYXNlICJXcml0ZXMgdHJhbnNmb3JtZWQgZGF0YSB0byIKICAgICAgICAgICAgCiAgICAgICAgICAgIGFwaS5zZWFyY2hDb250cm9sbGVyIC0+IGFwaS5lbWFpbFNlcnZpY2UgIlVzZXMgdG8gcGVyZm9ybSBzZWFyY2giCiAgICAgICAgICAgIAogICAgICAgICAgICB1aS5zZWFyY2hQYWdlIC0+IHVpLnJlc3VsdHNDb21wb25lbnQgIkRpc3BsYXlzIgogICAgICAgICAgICB1aS5yZXN1bHRzQ29tcG9uZW50IC0+IHVpLmVtYWlsVmlld0NvbXBvbmVudCAiTmF2aWdhdGVzIHRvIgoKICAgICAgICAgICAgIyBDb250YWluZXIgcmVsYXRpb25zaGlwcwogICAgICAgICAgICB1c2VyIC0+IHVpICJTZWFyY2hlcyBlbWFpbHMiCiAgICAgICAgICAgIHVpIC0+IGFwaSAiU2VuZHMgc2VhcmNoIHJlcXVlc3RzIgogICAgICAgICAgICBhcGkgLT4gc2VhcmNoRGF0YWJhc2UgIlJlYWRzIGVtYWlsIGRhdGEiCiAgICAgICAgICAgIAogICAgICAgICAgICBjbGVhbmVyLmVtYWlsUmVhZGVyIC0+IGZpbGVzeXN0ZW0gIlJlYWRzIHJhdyBlbWFpbHMgZnJvbSIKICAgICAgICAgICAgY2xlYW5lci5tZXNzYWdlUHVibGlzaGVyIC0+IG1lc3NhZ2VCdXMgIlB1Ymxpc2hlcyBtZXNzYWdlcyB0byIKICAgICAgICAgICAgCiAgICAgICAgICAgIGluZGV4ZXIubWVzc2FnZUNvbnN1bWVyIC0+IG1lc3NhZ2VCdXMgIkNvbnN1bWVzIG1lc3NhZ2VzIGZyb20iCiAgICAgICAgICAgIGluZGV4ZXIuaW5kZXhXcml0ZXIgLT4gaW5kZXhEYXRhYmFzZSAiV3JpdGVzIGluZGV4ZWQgZGF0YSB0byIKICAgICAgICAgICAgaW5kZXhlci5kYXRhUHVibGlzaGVyIC0+IGluZGV4RGF0YVF1ZXVlICJQdWJsaXNoZXMgaW5kZXhlZCBkYXRhIHRvIgogICAgICAgICAgICAKICAgICAgICAgICAgIyBIaWdoLWxldmVsIGNvbnRhaW5lciByZWxhdGlvbnNoaXBzIGZvciB0aGUgZGlhZ3JhbQogICAgICAgICAgICBjbGVhbmVyIC0+IG1lc3NhZ2VCdXMgIlB1Ymxpc2hlcyBjbGVhbmVkIGVtYWlscyIKICAgICAgICAgICAgbWVzc2FnZUJ1cyAtPiBpbmRleGVyICJEZWxpdmVycyBjbGVhbmVkIGVtYWlscyIKICAgICAgICAgICAgaW5kZXhlciAtPiBpbmRleERhdGFiYXNlICJTdG9yZXMgaW5kZXhlZCBlbWFpbHMiCiAgICAgICAgICAgIGluZGV4ZXIgLT4gaW5kZXhEYXRhUXVldWUgIlB1Ymxpc2hlcyBpbmRleGVkIGRhdGEiCiAgICAgICAgICAgIGluZGV4RGF0YVF1ZXVlIC0+IGRhdGFBUEkgIkRlbGl2ZXJzIGluZGV4ZWQgZGF0YSIKICAgICAgICAgICAgZGF0YUFQSSAtPiBzZWFyY2hEYXRhYmFzZSAiVXBkYXRlcyBzZWFyY2ggZGF0YSIKICAgICAgICB9CiAgICB9CgogICAgdmlld3MgewogICAgICAgIHN5c3RlbUNvbnRleHQgZW5yb25TeXN0ZW0gc3lzdGVtX2NvbnRleHQgewogICAgICAgICAgICBpbmNsdWRlICoKICAgICAgICAgICAgYXV0b2xheW91dCBscgogICAgICAgIH0KCiAgICAgICAgY29udGFpbmVyIGVucm9uU3lzdGVtIGNvbnRhaW5lcl9kaWFncmFtIHsKICAgICAgICAgICAgaW5jbHVkZSAqCiAgICAgICAgICAgIGF1dG9sYXlvdXQgbHIKICAgICAgICAgICAgZGVzY3JpcHRpb24gIlNob3dzIHRoZSBjb250YWluZXIgZGlhZ3JhbSBmb3IgdGhlIFNlYXJjIHN5c3RlbSB3aXRoIGRhdGEgZmxvdyBmcm9tIGxlZnQgdG8gcmlnaHQiCiAgICAgICAgfQoKICAgICAgICBjb21wb25lbnQgZW5yb25TeXN0ZW0uYXBpIGNvbXBvbmVudF9kaWFncmFtIHsKICAgICAgICAgICAgaW5jbHVkZSAqCiAgICAgICAgICAgIGF1dG9sYXlvdXQgbHIKICAgICAgICB9CiAgICAgICAgCiAgICAgICAgY29tcG9uZW50IGVucm9uU3lzdGVtLmNsZWFuZXIgY2xlYW5lcl9jb21wb25lbnRfZGlhZ3JhbSB7CiAgICAgICAgICAgIGluY2x1ZGUgKgogICAgICAgICAgICBhdXRvbGF5b3V0IGxyCiAgICAgICAgfQogICAgICAgIAogICAgICAgIGNvbXBvbmVudCBlbnJvblN5c3RlbS5pbmRleGVyIGluZGV4ZXJfY29tcG9uZW50X2RpYWdyYW0gewogICAgICAgICAgICBpbmNsdWRlICoKICAgICAgICAgICAgYXV0b2xheW91dCBscgogICAgICAgIH0KICAgICAgICAKICAgICAgICBjb21wb25lbnQgZW5yb25TeXN0ZW0uZGF0YUFQSSBkYXRhYXBpX2NvbXBvbmVudF9kaWFncmFtIHsKICAgICAgICAgICAgaW5jbHVkZSAqCiAgICAgICAgICAgIGF1dG9sYXlvdXQgbHIKICAgICAgICB9CiAgICAgICAgCiAgICAgICAgY29tcG9uZW50IGVucm9uU3lzdGVtLnVpIHVpX2NvbXBvbmVudF9kaWFncmFtIHsKICAgICAgICAgICAgaW5jbHVkZSAqCiAgICAgICAgICAgIGF1dG9sYXlvdXQgbHIKICAgICAgICB9CgogICAgICAgIHN0eWxlcyB7CiAgICAgICAgICAgIGVsZW1lbnQgIlBlcnNvbiIgewogICAgICAgICAgICAgICAgYmFja2dyb3VuZCAjYmExZTc1CiAgICAgICAgICAgICAgICBzaGFwZSBwZXJzb24KICAgICAgICAgICAgfQogICAgICAgICAgICBlbGVtZW50ICJTb2Z0d2FyZSBTeXN0ZW0iIHsKICAgICAgICAgICAgICAgIGJhY2tncm91bmQgI2Q5MjM4OQogICAgICAgICAgICB9CiAgICAgICAgICAgIGVsZW1lbnQgIkNvbnRhaW5lciIgewogICAgICAgICAgICAgICAgYmFja2dyb3VuZCAjZjgyODljCiAgICAgICAgICAgIH0KICAgICAgICAgICAgZWxlbWVudCAiQ29tcG9uZW50IiB7CiAgICAgICAgICAgICAgICBiYWNrZ3JvdW5kICNmNTcyYzEKICAgICAgICAgICAgfQogICAgICAgICAgICBlbGVtZW50ICJEYXRhYmFzZSIgewogICAgICAgICAgICAgICAgc2hhcGUgY3lsaW5kZXIKICAgICAgICAgICAgfQogICAgICAgICAgICBlbGVtZW50ICJRdWV1ZSIgewogICAgICAgICAgICAgICAgc2hhcGUgcGlwZQogICAgICAgICAgICAgICAgYmFja2dyb3VuZCAjNmI5YWU1CiAgICAgICAgICAgICAgICBjb2xvciAjZmZmZmZmCiAgICAgICAgICAgIH0KICAgICAgICB9CgogICAgICAgIHRoZW1lIGRlZmF1bHQKICAgIH0KfQ=="
+    "structurizr.dsl" : "d29ya3NwYWNlICJTZWFyYyIgIkM0IG1vZGVsIG9mIHRoZSBTZWFyYyBlbWFpbCBzZWFyY2ggc3lzdGVtIiB7CgogICAgIWlkZW50aWZpZXJzIGhpZXJhcmNoaWNhbAoKICAgIG1vZGVsIHsKICAgICAgICB1c2VyID0gcGVyc29uICJVc2VyIiB7CiAgICAgICAgICAgIGRlc2NyaXB0aW9uICJBIHVzZXIgd2hvIHNlYXJjaGVzIGFuZCBkb3dubG9hZHMgZW1haWxzLiIKICAgICAgICB9CgogICAgICAgIGZpbGVzeXN0ZW0gPSBzb2Z0d2FyZVN5c3RlbSAiUmF3IEVtYWlsIERhdGEgKEZpbGVzeXN0ZW0pIiB7CiAgICAgICAgICAgIGRlc2NyaXB0aW9uICJTdG9yZXMgdGhlIHJhdyBFbnJvbiBkYXRhc2V0IGluIHRleHQgZmlsZXMuIgogICAgICAgIH0KCiAgICAgICAgZW5yb25TeXN0ZW0gPSBzb2Z0d2FyZVN5c3RlbSAiU2VhcmMgU3lzdGVtIiB7CiAgICAgICAgICAgIGRlc2NyaXB0aW9uICJQcm9jZXNzZXMsIGluZGV4ZXMsIGFuZCBwcm92aWRlcyBzZWFyY2ggb3ZlciB0aGUgRW5yb24gZW1haWwgZGF0YXNldC4iCgogICAgICAgICAgICAjIERhdGFiYXNlcwogICAgICAgICAgICBzZWFyY2hEYXRhYmFzZSA9IGNvbnRhaW5lciAiU2VhcmNoIERhdGFiYXNlIiAiUG9zdGdyZVNRTCIgewogICAgICAgICAgICAgICAgZGVzY3JpcHRpb24gIlN0b3JlcyBzZWFyY2hhYmxlIGluZGV4ZWQgZW1haWwgZGF0YS4iCiAgICAgICAgICAgICAgICB0ZWNobm9sb2d5ICJQb3N0Z3JlU1FMIgogICAgICAgICAgICAgICAgdGFncyAiRGF0YWJhc2UiCiAgICAgICAgICAgIH0KCiAgICAgICAgICAgIGluZGV4RGF0YWJhc2UgPSBjb250YWluZXIgIkluZGV4ZXIgRGF0YWJhc2UiICJQb3N0Z3JlU1FMIiB7CiAgICAgICAgICAgICAgICBkZXNjcmlwdGlvbiAiU3RvcmVzIGluZGV4ZWQgd29yZHMsIG9jY3VycmVuY2VzLCBhbmQgZmlsZSByZWZlcmVuY2VzLiIKICAgICAgICAgICAgICAgIHRlY2hub2xvZ3kgIlBvc3RncmVTUUwiCiAgICAgICAgICAgICAgICB0YWdzICJEYXRhYmFzZSIKICAgICAgICAgICAgfQoKICAgICAgICAgICAgIyBNZXNzYWdlIFF1ZXVlcwogICAgICAgICAgICBjbGVhbmVkUXVldWUgPSBjb250YWluZXIgIkNsZWFuZWQgRW1haWwgUXVldWUiICJSYWJiaXRNUSIgewogICAgICAgICAgICAgICAgZGVzY3JpcHRpb24gIk1lc3NhZ2UgcXVldWUgZm9yIGNsZWFuZWQgZW1haWxzIGZyb20gQ2xlYW5lciB0byBJbmRleGVyLiIKICAgICAgICAgICAgICAgIHRlY2hub2xvZ3kgIlJhYmJpdE1RIgogICAgICAgICAgICAgICAgdGFncyAiUXVldWUiCiAgICAgICAgICAgIH0KCiAgICAgICAgICAgIGluZGV4ZWRRdWV1ZSA9IGNvbnRhaW5lciAiSW5kZXhlZCBEYXRhIFF1ZXVlIiAiUmFiYml0TVEiIHsKICAgICAgICAgICAgICAgIGRlc2NyaXB0aW9uICJNZXNzYWdlIHF1ZXVlIGZvciBpbmRleGVkIGRhdGEgZnJvbSBJbmRleGVyIHRvIFNlYXJjaCBBUEkuIgogICAgICAgICAgICAgICAgdGVjaG5vbG9neSAiUmFiYml0TVEiCiAgICAgICAgICAgICAgICB0YWdzICJRdWV1ZSIKICAgICAgICAgICAgfQoKICAgICAgICAgICAgIyBQcm9jZXNzaW5nIFNlcnZpY2VzCiAgICAgICAgICAgIGNsZWFuZXIgPSBjb250YWluZXIgIkNsZWFuZXIgU2VydmljZSIgIi5ORVQgV29ya2VyIFNlcnZpY2UiIHsKICAgICAgICAgICAgICAgIGRlc2NyaXB0aW9uICJSZW1vdmVzIGhlYWRlcnMgZnJvbSByYXcgZW1haWxzIGFuZCBwdWJsaXNoZXMgY2xlYW5lZCBjb250ZW50LiIKICAgICAgICAgICAgICAgIHRlY2hub2xvZ3kgIi5ORVQgV29ya2VyIFNlcnZpY2UiCiAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgIGNsZWFuZXJTZXJ2aWNlID0gY29tcG9uZW50ICJDbGVhbmVyU2VydmljZSIgewogICAgICAgICAgICAgICAgICAgIGRlc2NyaXB0aW9uICJQcm9jZXNzZXMgYW5kIGNsZWFucyByYXcgZW1haWwgZmlsZXMuIgogICAgICAgICAgICAgICAgICAgIHRlY2hub2xvZ3kgIkMjIFNlcnZpY2UiCiAgICAgICAgICAgICAgICB9CgogICAgICAgICAgICAgICAgbWVzc2FnZVB1Ymxpc2hlciA9IGNvbXBvbmVudCAiQ2xlYW5lZE1lc3NhZ2VQdWJsaXNoZXIiIHsKICAgICAgICAgICAgICAgICAgICBkZXNjcmlwdGlvbiAiUHVibGlzaGVzIGNsZWFuZWQgZW1haWxzIHRvIFJhYmJpdE1RIHdpdGggdG9waWMgJ0NsZWFuZWRGaWxlJy4iCiAgICAgICAgICAgICAgICAgICAgdGVjaG5vbG9neSAiRWFzeU5ldFEiCiAgICAgICAgICAgICAgICB9CiAgICAgICAgICAgIH0KCiAgICAgICAgICAgIGluZGV4ZXIgPSBjb250YWluZXIgIkluZGV4ZXIgU2VydmljZSIgIi5ORVQgV29ya2VyIFNlcnZpY2UiIHsKICAgICAgICAgICAgICAgIGRlc2NyaXB0aW9uICJJbmRleGVzIGNsZWFuZWQgZW1haWxzIGludG8gdGhlIGRhdGFiYXNlLiIKICAgICAgICAgICAgICAgIHRlY2hub2xvZ3kgIi5ORVQgV29ya2VyIFNlcnZpY2UiCiAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgIGluZGV4ZXJTZXJ2aWNlID0gY29tcG9uZW50ICJJbmRleGVyU2VydmljZSIgewogICAgICAgICAgICAgICAgICAgIGRlc2NyaXB0aW9uICJQcm9jZXNzZXMgY2xlYW5lZCBlbWFpbHMgYW5kIGluZGV4ZXMgd29yZHMuIgogICAgICAgICAgICAgICAgICAgIHRlY2hub2xvZ3kgIkMjIFNlcnZpY2UiCiAgICAgICAgICAgICAgICB9CgogICAgICAgICAgICAgICAgcmVwb3NpdG9yeSA9IGNvbXBvbmVudCAiSW5kZXhlclJlcG9zaXRvcnkiIHsKICAgICAgICAgICAgICAgICAgICBkZXNjcmlwdGlvbiAiSGFuZGxlcyBkYXRhYmFzZSBvcGVyYXRpb25zIGZvciBpbmRleGluZyB3b3Jkcywgb2NjdXJyZW5jZXMsIGFuZCBmaWxlcy4iCiAgICAgICAgICAgICAgICAgICAgdGVjaG5vbG9neSAiRGFwcGVyICsgUG9zdGdyZVNRTCIKICAgICAgICAgICAgICAgIH0KCiAgICAgICAgICAgICAgICBtZXNzYWdlSGFuZGxlciA9IGNvbXBvbmVudCAiSW5kZXhlZEZpbGVIYW5kbGVyIiB7CiAgICAgICAgICAgICAgICAgICAgZGVzY3JpcHRpb24gIkNvbnN1bWVzIGNsZWFuZWQgZW1haWwgbWVzc2FnZXMgYW5kIHRyaWdnZXJzIGluZGV4aW5nLiIKICAgICAgICAgICAgICAgICAgICB0ZWNobm9sb2d5ICJFYXN5TmV0USIKICAgICAgICAgICAgICAgIH0KCiAgICAgICAgICAgICAgICBtZXNzYWdlUHVibGlzaGVyID0gY29tcG9uZW50ICJJbmRleGVkTWVzc2FnZVB1Ymxpc2hlciIgewogICAgICAgICAgICAgICAgICAgIGRlc2NyaXB0aW9uICJQdWJsaXNoZXMgaW5kZXhlZCBlbWFpbCBkYXRhIHRvIFJhYmJpdE1RLiIKICAgICAgICAgICAgICAgICAgICB0ZWNobm9sb2d5ICJFYXN5TmV0USIKICAgICAgICAgICAgICAgIH0KICAgICAgICAgICAgfQoKICAgICAgICAgICAgIyBBUEkgU2VydmljZXMKICAgICAgICAgICAgc2VhcmNoQVBJID0gY29udGFpbmVyICJTZWFyY2ggQVBJIiAiQVNQLk5FVCBDb3JlIFdlYiBBUEkiIHsKICAgICAgICAgICAgICAgIGRlc2NyaXB0aW9uICJIYW5kbGVzIHNlYXJjaCBxdWVyaWVzIGFuZCByZXRyaWV2ZXMgcmVzdWx0cyBmcm9tIHRoZSBkYXRhYmFzZS4iCiAgICAgICAgICAgICAgICB0ZWNobm9sb2d5ICJBU1AuTkVUIENvcmUgV2ViIEFQSSIKICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgc2VhcmNoQ29udHJvbGxlciA9IGNvbXBvbmVudCAiU2VhcmNoQ29udHJvbGxlciIgewogICAgICAgICAgICAgICAgICAgIGRlc2NyaXB0aW9uICJQcm9jZXNzZXMgc2VhcmNoIHJlcXVlc3RzIGZyb20gdGhlIGZyb250ZW5kLiIKICAgICAgICAgICAgICAgICAgICB0ZWNobm9sb2d5ICJDIyBDb250cm9sbGVyIgogICAgICAgICAgICAgICAgfQoKICAgICAgICAgICAgICAgIHNlYXJjaFNlcnZpY2UgPSBjb21wb25lbnQgIlNlYXJjaFNlcnZpY2UiIHsKICAgICAgICAgICAgICAgICAgICBkZXNjcmlwdGlvbiAiSGFuZGxlcyBzZWFyY2ggbG9naWMgYW5kIGludGVyYWN0cyB3aXRoIHRoZSByZXBvc2l0b3J5LiIKICAgICAgICAgICAgICAgICAgICB0ZWNobm9sb2d5ICJDIyBTZXJ2aWNlIgogICAgICAgICAgICAgICAgfQoKICAgICAgICAgICAgICAgIHNlYXJjaFJlcG9zaXRvcnkgPSBjb21wb25lbnQgIlNlYXJjaFJlcG9zaXRvcnkiIHsKICAgICAgICAgICAgICAgICAgICBkZXNjcmlwdGlvbiAiUGVyZm9ybXMgZGF0YWJhc2UgcXVlcmllcyBmb3Igc2VhcmNoIG9wZXJhdGlvbnMuIgogICAgICAgICAgICAgICAgICAgIHRlY2hub2xvZ3kgIkRhcHBlciArIFBvc3RncmVTUUwiCiAgICAgICAgICAgICAgICB9CgogICAgICAgICAgICAgICAgaW5kZXhlZEZpbGVIYW5kbGVyID0gY29tcG9uZW50ICJJbmRleGVkRmlsZURUT0hhbmRsZXIiIHsKICAgICAgICAgICAgICAgICAgICBkZXNjcmlwdGlvbiAiQ29uc3VtZXMgaW5kZXhlZCBlbWFpbCBkYXRhIGFuZCB1cGRhdGVzIHRoZSBzZWFyY2ggZGF0YWJhc2UuIgogICAgICAgICAgICAgICAgICAgIHRlY2hub2xvZ3kgIkVhc3lOZXRRIgogICAgICAgICAgICAgICAgfQogICAgICAgICAgICB9CgogICAgICAgICAgICAjIEZyb250ZW5kCiAgICAgICAgICAgIHVpID0gY29udGFpbmVyICJXZWIgVUkiIHsKICAgICAgICAgICAgICAgIGRlc2NyaXB0aW9uICJBbGxvd3MgdXNlcnMgdG8gc2VhcmNoIGZvciBlbWFpbHMuIgogICAgICAgICAgICAgICAgdGVjaG5vbG9neSAiUmVhY3QgKyBTaGFkQ04iCiAgICAgICAgICAgIH0KCiAgICAgICAgICAgICMgUmVsYXRpb25zaGlwcyAtIEVuc3VyaW5nIENsZWFyIEZsb3cKICAgICAgICAgICAgdXNlciAtPiB1aSAiU2VhcmNoZXMgZW1haWxzIgogICAgICAgICAgICB1aSAtPiBzZWFyY2hBUEkgIlNlbmRzIHNlYXJjaCBxdWVyaWVzIgogICAgICAgICAgICBzZWFyY2hBUEkgLT4gc2VhcmNoRGF0YWJhc2UgIlJldHJpZXZlcyBzZWFyY2ggcmVzdWx0cyIKCiAgICAgICAgICAgIGNsZWFuZXIuY2xlYW5lclNlcnZpY2UgLT4gZmlsZXN5c3RlbSAiUmVhZHMgcmF3IGVtYWlscyIKICAgICAgICAgICAgY2xlYW5lci5jbGVhbmVyU2VydmljZSAtPiBjbGVhbmVkUXVldWUgIlB1Ymxpc2hlcyBjbGVhbmVkIGVtYWlscyIKICAgICAgICAgICAgY2xlYW5lci5tZXNzYWdlUHVibGlzaGVyIC0+IGNsZWFuZWRRdWV1ZSAiUHVibGlzaGVzIG1lc3NhZ2VzIgoKICAgICAgICAgICAgaW5kZXhlci5tZXNzYWdlSGFuZGxlciAtPiBjbGVhbmVkUXVldWUgIkNvbnN1bWVzIGNsZWFuZWQgZW1haWxzIgogICAgICAgICAgICBpbmRleGVyLmluZGV4ZXJTZXJ2aWNlIC0+IGluZGV4RGF0YWJhc2UgIlN0b3JlcyBpbmRleGVkIHdvcmRzLCBvY2N1cnJlbmNlcywgYW5kIGZpbGVzIgogICAgICAgICAgICBpbmRleGVyLm1lc3NhZ2VQdWJsaXNoZXIgLT4gaW5kZXhlZFF1ZXVlICJQdWJsaXNoZXMgaW5kZXhlZCBkYXRhIgoKICAgICAgICAgICAgc2VhcmNoQVBJLmluZGV4ZWRGaWxlSGFuZGxlciAtPiBpbmRleGVkUXVldWUgIkNvbnN1bWVzIGluZGV4ZWQgZGF0YSIKICAgICAgICAgICAgc2VhcmNoQVBJLnNlYXJjaFNlcnZpY2UgLT4gc2VhcmNoRGF0YWJhc2UgIlVwZGF0ZXMgc2VhcmNoIGRhdGEiCiAgICAgICAgfQogICAgfQoKICAgIHZpZXdzIHsKICAgICAgICBzeXN0ZW1Db250ZXh0IGVucm9uU3lzdGVtIHN5c3RlbV9jb250ZXh0IHsKICAgICAgICAgICAgaW5jbHVkZSAqCiAgICAgICAgICAgIGF1dG9sYXlvdXQgbHIKICAgICAgICB9CgogICAgICAgIGNvbnRhaW5lciBlbnJvblN5c3RlbSBjb250YWluZXJfZGlhZ3JhbSB7CiAgICAgICAgICAgIGluY2x1ZGUgKgogICAgICAgICAgICBhdXRvbGF5b3V0IHRiCiAgICAgICAgICAgIGRlc2NyaXB0aW9uICJTdHJ1Y3R1cmVkIGZsb3cgb2YgdGhlIFNlYXJjIHN5c3RlbSBmcm9tIHRvcCB0byBib3R0b20uIgogICAgICAgIH0KCiAgICAgICAgY29tcG9uZW50IGVucm9uU3lzdGVtLmNsZWFuZXIgY2xlYW5lcl9jb21wb25lbnRfZGlhZ3JhbSB7CiAgICAgICAgICAgIGluY2x1ZGUgKgogICAgICAgICAgICBhdXRvbGF5b3V0IGxyCiAgICAgICAgICAgIGRlc2NyaXB0aW9uICJEZXRhaWxlZCB2aWV3IG9mIHRoZSBDbGVhbmVyIFNlcnZpY2UgY29tcG9uZW50cy4iCiAgICAgICAgfQoKICAgICAgICBjb21wb25lbnQgZW5yb25TeXN0ZW0uaW5kZXhlciBpbmRleGVyX2NvbXBvbmVudF9kaWFncmFtIHsKICAgICAgICAgICAgaW5jbHVkZSAqCiAgICAgICAgICAgIGF1dG9sYXlvdXQgbHIKICAgICAgICAgICAgZGVzY3JpcHRpb24gIkRldGFpbGVkIHZpZXcgb2YgdGhlIEluZGV4ZXIgU2VydmljZSBjb21wb25lbnRzLiIKICAgICAgICB9CgogICAgICAgIGNvbXBvbmVudCBlbnJvblN5c3RlbS5zZWFyY2hBUEkgc2VhcmNoYXBpX2NvbXBvbmVudF9kaWFncmFtIHsKICAgICAgICAgICAgaW5jbHVkZSAqCiAgICAgICAgICAgIGF1dG9sYXlvdXQgbHIKICAgICAgICAgICAgZGVzY3JpcHRpb24gIkRldGFpbGVkIHZpZXcgb2YgdGhlIFNlYXJjaCBBUEkgY29tcG9uZW50cy4iCiAgICAgICAgfQoKICAgICAgICBzdHlsZXMgewogICAgICAgICAgICBlbGVtZW50ICJQZXJzb24iIHsKICAgICAgICAgICAgICAgIGJhY2tncm91bmQgI2JhMWU3NQogICAgICAgICAgICAgICAgc2hhcGUgcGVyc29uCiAgICAgICAgICAgIH0KICAgICAgICAgICAgZWxlbWVudCAiU29mdHdhcmUgU3lzdGVtIiB7CiAgICAgICAgICAgICAgICBiYWNrZ3JvdW5kICNkOTIzODkKICAgICAgICAgICAgfQogICAgICAgICAgICBlbGVtZW50ICJDb250YWluZXIiIHsKICAgICAgICAgICAgICAgIGJhY2tncm91bmQgI2Y4Mjg5YwogICAgICAgICAgICB9CiAgICAgICAgICAgIGVsZW1lbnQgIkNvbXBvbmVudCIgewogICAgICAgICAgICAgICAgYmFja2dyb3VuZCAjZjU3MmMxCiAgICAgICAgICAgIH0KICAgICAgICAgICAgZWxlbWVudCAiRGF0YWJhc2UiIHsKICAgICAgICAgICAgICAgIHNoYXBlIGN5bGluZGVyCiAgICAgICAgICAgIH0KICAgICAgICAgICAgZWxlbWVudCAiUXVldWUiIHsKICAgICAgICAgICAgICAgIHNoYXBlIHBpcGUKICAgICAgICAgICAgICAgIGJhY2tncm91bmQgIzZiOWFlNQogICAgICAgICAgICAgICAgY29sb3IgI2ZmZmZmZgogICAgICAgICAgICB9CiAgICAgICAgfQoKICAgICAgICB0aGVtZSBkZWZhdWx0CiAgICB9Cn0="
   },
   "views" : {
     "componentViews" : [ {
@@ -540,73 +364,38 @@
         "rankSeparation" : 300,
         "vertices" : false
       },
-      "containerId" : "22",
-      "dimensions" : {
-        "height" : 811,
-        "width" : 1640
-      },
-      "elements" : [ {
-        "id" : "23",
-        "x" : 219,
-        "y" : 185
-      }, {
-        "id" : "24",
-        "x" : 969,
-        "y" : 185
-      } ],
-      "externalContainerBoundariesVisible" : false,
-      "key" : "component_diagram",
-      "order" : 3,
-      "relationships" : [ {
-        "id" : "40"
-      } ]
-    }, {
-      "automaticLayout" : {
-        "applied" : true,
-        "edgeSeparation" : 0,
-        "implementation" : "Graphviz",
-        "nodeSeparation" : 300,
-        "rankDirection" : "LeftRight",
-        "rankSeparation" : 300,
-        "vertices" : false
-      },
       "containerId" : "8",
+      "description" : "Detailed view of the Cleaner Service components.",
       "dimensions" : {
-        "height" : 1320,
-        "width" : 3120
+        "height" : 1411,
+        "width" : 1620
       },
       "elements" : [ {
         "id" : "2",
         "x" : 969,
-        "y" : 785
+        "y" : 771
       }, {
-        "id" : "4",
-        "x" : 2469,
-        "y" : 185
+        "id" : "6",
+        "x" : 969,
+        "y" : 171
       }, {
         "id" : "9",
         "x" : 219,
-        "y" : 185
+        "y" : 771
       }, {
         "id" : "10",
-        "x" : 969,
-        "y" : 185
-      }, {
-        "id" : "11",
-        "x" : 1719,
-        "y" : 185
+        "x" : 219,
+        "y" : 171
       } ],
       "externalContainerBoundariesVisible" : false,
       "key" : "cleaner_component_diagram",
-      "order" : 4,
+      "order" : 3,
       "relationships" : [ {
+        "id" : "26"
+      }, {
         "id" : "29"
       }, {
-        "id" : "30"
-      }, {
-        "id" : "47"
-      }, {
-        "id" : "50"
+        "id" : "31"
       } ]
     }, {
       "automaticLayout" : {
@@ -618,159 +407,104 @@
         "rankSeparation" : 300,
         "vertices" : false
       },
-      "containerId" : "12",
+      "containerId" : "11",
+      "description" : "Detailed view of the Indexer Service components.",
       "dimensions" : {
-        "height" : 1828,
-        "width" : 3870
+        "height" : 2611,
+        "width" : 1620
+      },
+      "elements" : [ {
+        "id" : "5",
+        "x" : 970,
+        "y" : 172
+      }, {
+        "id" : "6",
+        "x" : 970,
+        "y" : 1372
+      }, {
+        "id" : "7",
+        "x" : 970,
+        "y" : 1972
+      }, {
+        "id" : "12",
+        "x" : 220,
+        "y" : 172
+      }, {
+        "id" : "13",
+        "x" : 220,
+        "y" : 772
+      }, {
+        "id" : "14",
+        "x" : 220,
+        "y" : 1372
+      }, {
+        "id" : "15",
+        "x" : 220,
+        "y" : 1972
+      } ],
+      "externalContainerBoundariesVisible" : false,
+      "key" : "indexer_component_diagram",
+      "order" : 4,
+      "relationships" : [ {
+        "id" : "32"
+      }, {
+        "id" : "34"
+      }, {
+        "id" : "36"
+      } ]
+    }, {
+      "automaticLayout" : {
+        "applied" : true,
+        "edgeSeparation" : 0,
+        "implementation" : "Graphviz",
+        "nodeSeparation" : 300,
+        "rankDirection" : "LeftRight",
+        "rankSeparation" : 300,
+        "vertices" : false
+      },
+      "containerId" : "16",
+      "description" : "Detailed view of the Search API components.",
+      "dimensions" : {
+        "height" : 2611,
+        "width" : 1620
       },
       "elements" : [ {
         "id" : "4",
         "x" : 970,
-        "y" : 1293
+        "y" : 772
       }, {
-        "id" : "5",
-        "x" : 3220,
-        "y" : 568
-      }, {
-        "id" : "6",
-        "x" : 2470,
-        "y" : 1293
-      }, {
-        "id" : "13",
-        "x" : 220,
-        "y" : 185
-      }, {
-        "id" : "14",
+        "id" : "7",
         "x" : 970,
-        "y" : 439
-      }, {
-        "id" : "15",
-        "x" : 1720,
-        "y" : 568
-      }, {
-        "id" : "16",
-        "x" : 2470,
-        "y" : 568
+        "y" : 1972
       }, {
         "id" : "17",
         "x" : 220,
-        "y" : 785
-      } ],
-      "externalContainerBoundariesVisible" : false,
-      "key" : "indexer_component_diagram",
-      "order" : 5,
-      "relationships" : [ {
-        "id" : "31"
+        "y" : 172
       }, {
-        "id" : "32"
-      }, {
-        "id" : "33"
-      }, {
-        "id" : "52",
-        "vertices" : [ {
-          "x" : 670,
-          "y" : 635
-        }, {
-          "x" : 970,
-          "y" : 1264
-        } ]
-      }, {
-        "id" : "54",
-        "vertices" : [ {
-          "x" : 2470,
-          "y" : 1264
-        } ]
-      }, {
-        "id" : "56"
-      } ]
-    }, {
-      "automaticLayout" : {
-        "applied" : true,
-        "edgeSeparation" : 0,
-        "implementation" : "Graphviz",
-        "nodeSeparation" : 300,
-        "rankDirection" : "LeftRight",
-        "rankSeparation" : 300,
-        "vertices" : false
-      },
-      "containerId" : "18",
-      "dimensions" : {
-        "height" : 1320,
-        "width" : 2390
-      },
-      "elements" : [ {
-        "id" : "5",
-        "x" : 969,
-        "y" : 785
-      }, {
-        "id" : "7",
-        "x" : 1719,
-        "y" : 785
+        "id" : "18",
+        "x" : 220,
+        "y" : 772
       }, {
         "id" : "19",
-        "x" : 219,
-        "y" : 185
+        "x" : 220,
+        "y" : 1372
       }, {
         "id" : "20",
-        "x" : 969,
-        "y" : 185
-      }, {
-        "id" : "21",
-        "x" : 1719,
-        "y" : 185
-      } ],
-      "externalContainerBoundariesVisible" : false,
-      "key" : "dataapi_component_diagram",
-      "order" : 6,
-      "relationships" : [ {
-        "id" : "34"
-      }, {
-        "id" : "36"
-      }, {
-        "id" : "37"
-      }, {
-        "id" : "38"
-      } ]
-    }, {
-      "automaticLayout" : {
-        "applied" : true,
-        "edgeSeparation" : 0,
-        "implementation" : "Graphviz",
-        "nodeSeparation" : 300,
-        "rankDirection" : "LeftRight",
-        "rankSeparation" : 300,
-        "vertices" : false
-      },
-      "containerId" : "25",
-      "dimensions" : {
-        "height" : 811,
-        "width" : 2390
-      },
-      "elements" : [ {
-        "id" : "26",
         "x" : 220,
-        "y" : 185
-      }, {
-        "id" : "27",
-        "x" : 970,
-        "y" : 185
-      }, {
-        "id" : "28",
-        "x" : 1720,
-        "y" : 185
+        "y" : 1972
       } ],
       "externalContainerBoundariesVisible" : false,
-      "key" : "ui_component_diagram",
-      "order" : 7,
+      "key" : "searchapi_component_diagram",
+      "order" : 5,
       "relationships" : [ {
-        "id" : "41"
+        "id" : "38"
       }, {
-        "id" : "42"
+        "id" : "40"
       } ]
     } ],
     "configuration" : {
       "branding" : { },
-      "lastSavedView" : "container_diagram",
+      "lastSavedView" : "system_context",
       "metadataSymbols" : "SquareBrackets",
       "styles" : {
         "elements" : [ {
@@ -805,143 +539,77 @@
         "edgeSeparation" : 0,
         "implementation" : "Graphviz",
         "nodeSeparation" : 300,
-        "rankDirection" : "LeftRight",
+        "rankDirection" : "TopBottom",
         "rankSeparation" : 300,
         "vertices" : false
       },
-      "description" : "Shows the container diagram for the Searc system with data flow from left to right",
+      "description" : "Structured flow of the Searc system from top to bottom.",
       "dimensions" : {
-        "height" : 3709,
-        "width" : 3140
+        "height" : 2691,
+        "width" : 3870
       },
       "elements" : [ {
         "id" : "1",
-        "x" : 245,
-        "y" : 152
+        "x" : 620,
+        "y" : 151
       }, {
         "id" : "2",
-        "x" : 970,
-        "y" : 3161
+        "x" : 3220,
+        "y" : 2051
       }, {
         "id" : "4",
-        "x" : 970,
-        "y" : 2561
+        "x" : 220,
+        "y" : 2051
       }, {
         "id" : "5",
-        "x" : 970,
-        "y" : 1361
+        "x" : 1720,
+        "y" : 2051
       }, {
         "id" : "6",
-        "x" : 970,
-        "y" : 1961
+        "x" : 2470,
+        "y" : 2051
       }, {
         "id" : "7",
-        "x" : 2470,
-        "y" : 1361
+        "x" : 970,
+        "y" : 2051
       }, {
         "id" : "8",
-        "x" : 220,
-        "y" : 2561
+        "x" : 2470,
+        "y" : 1451
       }, {
-        "id" : "12",
-        "x" : 220,
-        "y" : 1961
-      }, {
-        "id" : "18",
+        "id" : "11",
         "x" : 1720,
-        "y" : 1361
+        "y" : 1451
       }, {
-        "id" : "22",
-        "x" : 1720,
-        "y" : 761
+        "id" : "16",
+        "x" : 595,
+        "y" : 1451
       }, {
-        "id" : "25",
-        "x" : 970,
-        "y" : 761
+        "id" : "21",
+        "x" : 595,
+        "y" : 851
       } ],
       "externalSoftwareSystemBoundariesVisible" : false,
       "key" : "container_diagram",
       "order" : 2,
       "relationships" : [ {
-        "id" : "35",
-        "vertices" : [ {
-          "x" : 1570,
-          "y" : 1361
-        } ]
+        "id" : "22"
       }, {
-        "id" : "39",
-        "vertices" : [ {
-          "x" : 2320,
-          "y" : 1661
-        } ]
+        "id" : "24"
       }, {
-        "id" : "43"
+        "id" : "25"
       }, {
-        "id" : "45"
+        "id" : "27"
       }, {
-        "id" : "46"
+        "id" : "30"
       }, {
-        "id" : "48"
+        "id" : "33"
       }, {
-        "id" : "51",
-        "vertices" : [ {
-          "x" : 820,
-          "y" : 2861
-        } ]
+        "id" : "35"
       }, {
-        "id" : "53",
-        "vertices" : [ {
-          "x" : 726,
-          "y" : 2528
-        } ]
+        "id" : "37"
       }, {
-        "id" : "55",
-        "vertices" : [ {
-          "x" : 820,
-          "y" : 2261
-        } ]
-      }, {
-        "id" : "57",
-        "vertices" : [ {
-          "x" : 913,
-          "y" : 1928
-        } ]
-      }, {
-        "id" : "58",
-        "vertices" : [ {
-          "x" : 820,
-          "y" : 2561
-        } ]
-      }, {
-        "id" : "59",
-        "vertices" : [ {
-          "x" : 913,
-          "y" : 2293
-        } ]
-      }, {
-        "id" : "60",
-        "vertices" : [ {
-          "x" : 820,
-          "y" : 1961
-        } ]
-      }, {
-        "id" : "61",
-        "vertices" : [ {
-          "x" : 726,
-          "y" : 1693
-        } ]
-      }, {
-        "id" : "62",
-        "vertices" : [ {
-          "x" : 1570,
-          "y" : 1661
-        } ]
-      }, {
-        "id" : "63",
-        "vertices" : [ {
-          "x" : 2320,
-          "y" : 1361
-        } ]
+        "id" : "39"
       } ],
       "softwareSystemId" : "3"
     } ],
@@ -976,9 +644,9 @@
       "key" : "system_context",
       "order" : 1,
       "relationships" : [ {
-        "id" : "44"
+        "id" : "23"
       }, {
-        "id" : "49"
+        "id" : "28"
       } ],
       "softwareSystemId" : "3"
     } ]

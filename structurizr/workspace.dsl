@@ -7,184 +7,127 @@ workspace "Searc" "C4 model of the Searc email search system" {
             description "A user who searches and downloads emails."
         }
 
-        filesystem = softwareSystem "Local Filesystem" {
-            description "Stores the raw Enron dataset."
+        filesystem = softwareSystem "Raw Email Data (Filesystem)" {
+            description "Stores the raw Enron dataset in text files."
         }
 
         enronSystem = softwareSystem "Searc System" {
             description "Processes, indexes, and provides search over the Enron email dataset."
 
-            # Message broker
-            messageBus = container "Email Queue" "RabbitMQ message bus for raw emails" {
-                description "Handles asynchronous communication between cleaner and indexer services."
-                technology "RabbitMQ"
-                tags "Queue"
-            }
-            
-            indexDataQueue = container "Index Data Queue" "RabbitMQ message bus for indexed data" {
-                description "Handles asynchronous communication between indexer and data API services."
-                technology "RabbitMQ"
-                tags "Queue"
-            }
-            
-            # Database containers
-            indexDatabase = container "Index Database" {
-                description "Stores indexed email data."
-                technology "PostgreSQL"
-                tags "Database"
-            }
-            
-            searchDatabase = container "Search Database" {
-                description "Stores email data optimized for search queries."
+            # Databases
+            searchDatabase = container "Search Database" "PostgreSQL" {
+                description "Stores searchable indexed email data."
                 technology "PostgreSQL"
                 tags "Database"
             }
 
-            # Processing services
-            cleaner = container "Cleaner Service" {
-                description "Processes raw emails from the dataset, removes headers, and forwards cleaned content."
+            indexDatabase = container "Indexer Database" "PostgreSQL" {
+                description "Stores indexed words, occurrences, and file references."
+                technology "PostgreSQL"
+                tags "Database"
+            }
+
+            # Message Queues
+            cleanedQueue = container "Cleaned Email Queue" "RabbitMQ" {
+                description "Message queue for cleaned emails from Cleaner to Indexer."
+                technology "RabbitMQ"
+                tags "Queue"
+            }
+
+            indexedQueue = container "Indexed Data Queue" "RabbitMQ" {
+                description "Message queue for indexed data from Indexer to Search API."
+                technology "RabbitMQ"
+                tags "Queue"
+            }
+
+            # Processing Services
+            cleaner = container "Cleaner Service" ".NET Worker Service" {
+                description "Removes headers from raw emails and publishes cleaned content."
                 technology ".NET Worker Service"
                 
-                emailReader = component "EmailReader" {
-                    description "Reads raw email files from the filesystem"
-                    technology "C# File I/O"
+                cleanerService = component "CleanerService" {
+                    description "Processes and cleans raw email files."
+                    technology "C# Service"
                 }
-                
-                contentCleaner = component "ContentCleaner" {
-                    description "Removes headers and normalizes email content"
-                    technology "C# Text Processing"
-                }
-                
-                messagePublisher = component "MessagePublisher" {
-                    description "Publishes cleaned emails to the message queue"
-                    technology "RabbitMQ Client"
+
+                messagePublisher = component "CleanedMessagePublisher" {
+                    description "Publishes cleaned emails to RabbitMQ with topic 'CleanedFile'."
+                    technology "EasyNetQ"
                 }
             }
 
-            indexer = container "Indexer Service" {
+            indexer = container "Indexer Service" ".NET Worker Service" {
                 description "Indexes cleaned emails into the database."
                 technology ".NET Worker Service"
                 
-                messageConsumer = component "MessageConsumer" {
-                    description "Consumes cleaned email messages from the queue"
-                    technology "RabbitMQ Client"
-                }
-                
-                emailParser = component "EmailParser" {
-                    description "Parses email content into structured data"
-                    technology "C# Text Processing"
-                }
-                
-                indexWriter = component "IndexWriter" {
-                    description "Writes parsed data to the index database"
-                    technology "Entity Framework Core"
-                }
-                
-                dataPublisher = component "DataPublisher" {
-                    description "Publishes indexed data to the Index Data Queue"
-                    technology "RabbitMQ Client"
-                }
-                
-                dataExporter = component "DataExporter" {
-                    description "Exports indexed data to the Database API"
-                    technology "HTTP Client"
-                }
-            }
-
-            # API services
-            dataAPI = container "Data API" {
-                description "Processes indexed data and updates search database."
-                technology ".NET Worker Service"
-                
-                dataConsumer = component "DataConsumer" {
-                    description "Consumes indexed data messages from the queue"
-                    technology "RabbitMQ Client"
-                }
-                
-                dataTransferService = component "DataTransferService" {
-                    description "Manages data transfer between databases"
+                indexerService = component "IndexerService" {
+                    description "Processes cleaned emails and indexes words."
                     technology "C# Service"
                 }
-                
-                dataMapperService = component "DataMapperService" {
-                    description "Maps data between different database schemas"
-                    technology "AutoMapper"
+
+                repository = component "IndexerRepository" {
+                    description "Handles database operations for indexing words, occurrences, and files."
+                    technology "Dapper + PostgreSQL"
+                }
+
+                messageHandler = component "IndexedFileHandler" {
+                    description "Consumes cleaned email messages and triggers indexing."
+                    technology "EasyNetQ"
+                }
+
+                messagePublisher = component "IndexedMessagePublisher" {
+                    description "Publishes indexed email data to RabbitMQ."
+                    technology "EasyNetQ"
                 }
             }
 
-            api = container "Search API" {
-                description "Handles search requests."
+            # API Services
+            searchAPI = container "Search API" "ASP.NET Core Web API" {
+                description "Handles search queries and retrieves results from the database."
                 technology "ASP.NET Core Web API"
-
+                
                 searchController = component "SearchController" {
-                    description "Handles search queries from the UI."
-                    technology "ASP.NET Core MVC Controller"
+                    description "Processes search requests from the frontend."
+                    technology "C# Controller"
                 }
 
-                emailService = component "EmailService" {
-                    description "Encapsulates the search logic and database access."
+                searchService = component "SearchService" {
+                    description "Handles search logic and interacts with the repository."
                     technology "C# Service"
                 }
+
+                searchRepository = component "SearchRepository" {
+                    description "Performs database queries for search operations."
+                    technology "Dapper + PostgreSQL"
+                }
+
+                indexedFileHandler = component "IndexedFileDTOHandler" {
+                    description "Consumes indexed email data and updates the search database."
+                    technology "EasyNetQ"
+                }
             }
 
-            # User interface
+            # Frontend
             ui = container "Web UI" {
-                description "Allows users to search emails."
-                technology "Razor Pages"
-                
-                searchPage = component "SearchPage" {
-                    description "Displays the search interface"
-                    technology "Razor Page"
-                }
-                
-                resultsComponent = component "ResultsComponent" {
-                    description "Displays search results"
-                    technology "Razor Component"
-                }
-                
-                emailViewComponent = component "EmailViewComponent" {
-                    description "Displays individual email content"
-                    technology "Razor Component"
-                }
+                description "Allows users to search for emails."
+                technology "React + ShadCN"
             }
 
-            # Internal component relationships
-            cleaner.emailReader -> cleaner.contentCleaner "Passes raw emails to"
-            cleaner.contentCleaner -> cleaner.messagePublisher "Sends cleaned content to"
-            
-            indexer.messageConsumer -> indexer.emailParser "Passes cleaned emails to"
-            indexer.emailParser -> indexer.indexWriter "Sends parsed data to"
-            indexer.indexWriter -> indexer.dataPublisher "Sends indexed data to"
-            
-            dataAPI.dataConsumer -> indexDataQueue "Consumes messages from"
-            dataAPI.dataConsumer -> dataAPI.dataTransferService "Passes indexed data to"
-            dataAPI.dataTransferService -> dataAPI.dataMapperService "Uses"
-            dataAPI.dataTransferService -> searchDatabase "Writes transformed data to"
-            
-            api.searchController -> api.emailService "Uses to perform search"
-            
-            ui.searchPage -> ui.resultsComponent "Displays"
-            ui.resultsComponent -> ui.emailViewComponent "Navigates to"
-
-            # Container relationships
+            # Relationships - Ensuring Clear Flow
             user -> ui "Searches emails"
-            ui -> api "Sends search requests"
-            api -> searchDatabase "Reads email data"
-            
-            cleaner.emailReader -> filesystem "Reads raw emails from"
-            cleaner.messagePublisher -> messageBus "Publishes messages to"
-            
-            indexer.messageConsumer -> messageBus "Consumes messages from"
-            indexer.indexWriter -> indexDatabase "Writes indexed data to"
-            indexer.dataPublisher -> indexDataQueue "Publishes indexed data to"
-            
-            # High-level container relationships for the diagram
-            cleaner -> messageBus "Publishes cleaned emails"
-            messageBus -> indexer "Delivers cleaned emails"
-            indexer -> indexDatabase "Stores indexed emails"
-            indexer -> indexDataQueue "Publishes indexed data"
-            indexDataQueue -> dataAPI "Delivers indexed data"
-            dataAPI -> searchDatabase "Updates search data"
+            ui -> searchAPI "Sends search queries"
+            searchAPI -> searchDatabase "Retrieves search results"
+
+            cleaner.cleanerService -> filesystem "Reads raw emails"
+            cleaner.cleanerService -> cleanedQueue "Publishes cleaned emails"
+            cleaner.messagePublisher -> cleanedQueue "Publishes messages"
+
+            indexer.messageHandler -> cleanedQueue "Consumes cleaned emails"
+            indexer.indexerService -> indexDatabase "Stores indexed words, occurrences, and files"
+            indexer.messagePublisher -> indexedQueue "Publishes indexed data"
+
+            searchAPI.indexedFileHandler -> indexedQueue "Consumes indexed data"
+            searchAPI.searchService -> searchDatabase "Updates search data"
         }
     }
 
@@ -196,33 +139,26 @@ workspace "Searc" "C4 model of the Searc email search system" {
 
         container enronSystem container_diagram {
             include *
-            autolayout lr
-            description "Shows the container diagram for the Searc system with data flow from left to right"
+            autolayout tb
+            description "Structured flow of the Searc system from top to bottom."
         }
 
-        component enronSystem.api component_diagram {
-            include *
-            autolayout lr
-        }
-        
         component enronSystem.cleaner cleaner_component_diagram {
             include *
             autolayout lr
+            description "Detailed view of the Cleaner Service components."
         }
-        
+
         component enronSystem.indexer indexer_component_diagram {
             include *
             autolayout lr
+            description "Detailed view of the Indexer Service components."
         }
-        
-        component enronSystem.dataAPI dataapi_component_diagram {
+
+        component enronSystem.searchAPI searchapi_component_diagram {
             include *
             autolayout lr
-        }
-        
-        component enronSystem.ui ui_component_diagram {
-            include *
-            autolayout lr
+            description "Detailed view of the Search API components."
         }
 
         styles {
