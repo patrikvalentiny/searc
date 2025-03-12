@@ -352,30 +352,6 @@ services:
       - ./data/C:/data
     restart: no
 
-  postgres-exporter:
-    image: prometheuscommunity/postgres-exporter:latest
-    container_name: postgres-exporter
-    environment:
-      DATA_SOURCE_NAME: "postgresql://${DB_USER}:${DB_PASSWORD}@searc-db:5432/${DB_NAME}?sslmode=disable"
-    ports:
-      - "9187:9187"
-    networks:
-      - searc-network
-    depends_on:
-      - searc-postgres
-
-  indexer-postgres-exporter:
-    image: prometheuscommunity/postgres-exporter:latest
-    container_name: indexer-postgres-exporter
-    environment:
-      DATA_SOURCE_NAME: "postgresql://${INDEXER_DB_USER}:${INDEXER_DB_PASSWORD}@indexer-db:5432/${INDEXER_DB_NAME}?sslmode=disable"
-    ports:
-      - "9188:9187"
-    networks:
-      - searc-network
-    depends_on:
-      - indexer-postgres
-
 networks:
   searc-network:
     driver: bridge
