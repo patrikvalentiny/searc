@@ -1,0 +1,12 @@
+node_modules
+dist
+.git
+.gitignore
+*.log
+.DS_Store
+.vscode
+*.md
+
+# .env file contains default environment variables for docker
+.env
+.git/

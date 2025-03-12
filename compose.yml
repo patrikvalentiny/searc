@@ -15,12 +15,12 @@ services:
       - searc-network
     restart: unless-stopped
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
+      test: [ "CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}" ]
       interval: 10s
       timeout: 5s
       retries: 5
       start_period: 10s
-  
+
   # Indexer Postgres    
   indexer-postgres:
     image: postgres:latest
@@ -62,7 +62,7 @@ services:
       timeout: 10s
       retries: 5
       start_period: 40s
-      
+
   searc:
     build:
       context: .
@@ -86,40 +86,11 @@ services:
       DB_NAME: ${DB_NAME}
       DB_USER: ${DB_USER}
       DB_PASSWORD: ${DB_PASSWORD}
-    networks:
-      - searc-network
-    restart: unless-stopped
-
-  cleaner-service:
-    build:
-      context: .
-      dockerfile: src/CleanerService/Dockerfile
-    depends_on:
-      cleaner-postgres:
-        condition: service_healthy
-      flyway-cleaner:
-        condition: service_completed_successfully
-      searc-rabbitmq:
-        condition: service_healthy
-    environment:
-      ASPNETCORE_ENVIRONMENT: "Production"
-      DB_CLEANER_HOST: cleaner-db
-      DB_CLEANER_PORT: ${DB_CLEANER_PORT}
-      DB_CLEANER_NAME: ${DB_CLEANER_NAME}
-      DB_CLEANER_USER: ${DB_CLEANER_USER}
-      DB_CLEANER_PASSWORD: ${DB_CLEANER_PASSWORD}
-      APP_DATA_PATH: /data
-      RABBITMQ_HOST: searc-rabbitmq
-      RABBITMQ_PORT: ${RABBITMQ_PORT}
-      RABBITMQ_USER: ${RABBITMQ_USER}
-      RABBITMQ_PASS: ${RABBITMQ_PASS}
       SEQ_URL: http://seq:5341
       ZIPKIN_URL: http://zipkin:9411/api/v2/spans
     networks:
       - searc-network
-    volumes:
-      - ./data:/data
-    restart: no
+    restart: unless-stopped
 
   structurizr-lite:
     image: structurizr/lite
@@ -129,7 +100,7 @@ services:
     volumes:
       - ./structurizr:/usr/local/structurizr
     restart: unless-stopped
-  
+
   seq:
     image: datalust/seq
     container_name: seq
@@ -166,7 +137,7 @@ services:
         condition: service_healthy
     networks:
       - searc-network
-  
+
   # Indexer Flyway      
   indexer-flyway:
     image: flyway/flyway:latest
@@ -185,7 +156,7 @@ services:
         condition: service_healthy
     networks:
       - searc-network
-  
+
   # Indexer Service    
   indexer-service:
     build:
@@ -198,8 +169,6 @@ services:
         condition: service_completed_successfully
       searc-rabbitmq:
         condition: service_healthy
-      cleaner-service:
-        condition: service_started
     environment:
       ASPNETCORE_ENVIRONMENT: "Production"
       INDEXER_DB_HOST: indexer-db
@@ -216,11 +185,96 @@ services:
     networks:
       - searc-network
     restart: no
-    
+
+  # Frontend Service
+  # frontend:
+  #   build:
+  #     context: .
+  #     dockerfile: src/frontend/Dockerfile
+  #   container_name: searc-frontend
+  #   environment:
+  #     - VITE_API_BASE_URL=http://searc:6969
+  #   ports:
+  #     - "8000:8000"
+  #   depends_on:
+  #     - searc
+  #   networks:
+  #     - searc-network
+  #   restart: unless-stopped
+
+  cleaner-service-a:
+    build:
+      context: .
+      dockerfile: src/CleanerService/Dockerfile
+    container_name: cleaner-service-a
+    depends_on:
+      searc-rabbitmq:
+        condition: service_healthy
+    environment:
+      ASPNETCORE_ENVIRONMENT: "Production"
+      APP_DATA_PATH: /data
+      RABBITMQ_HOST: searc-rabbitmq
+      RABBITMQ_PORT: ${RABBITMQ_PORT}
+      RABBITMQ_USER: ${RABBITMQ_USER}
+      RABBITMQ_PASS: ${RABBITMQ_PASS}
+      SEQ_URL: http://seq:5341
+      ZIPKIN_URL: http://zipkin:9411/api/v2/spans
+    networks:
+      - searc-network
+    volumes:
+      - ./data/A:/data
+    restart: no
+
+  cleaner-service-b:
+    build:
+      context: .
+      dockerfile: src/CleanerService/Dockerfile
+    container_name: cleaner-service-b
+    depends_on:
+      searc-rabbitmq:
+        condition: service_healthy
+    environment:
+      ASPNETCORE_ENVIRONMENT: "Production"
+      APP_DATA_PATH: /data
+      RABBITMQ_HOST: searc-rabbitmq
+      RABBITMQ_PORT: ${RABBITMQ_PORT}
+      RABBITMQ_USER: ${RABBITMQ_USER}
+      RABBITMQ_PASS: ${RABBITMQ_PASS}
+      SEQ_URL: http://seq:5341
+      ZIPKIN_URL: http://zipkin:9411/api/v2/spans
+    networks:
+      - searc-network
+    volumes:
+      - ./data/B:/data
+    restart: no
+
+  cleaner-service-c:
+    build:
+      context: .
+      dockerfile: src/CleanerService/Dockerfile
+    container_name: cleaner-service-c
+    depends_on:
+      searc-rabbitmq:
+        condition: service_healthy
+    environment:
+      ASPNETCORE_ENVIRONMENT: "Production"
+      APP_DATA_PATH: /data
+      RABBITMQ_HOST: searc-rabbitmq
+      RABBITMQ_PORT: ${RABBITMQ_PORT}
+      RABBITMQ_USER: ${RABBITMQ_USER}
+      RABBITMQ_PASS: ${RABBITMQ_PASS}
+      SEQ_URL: http://seq:5341
+      ZIPKIN_URL: http://zipkin:9411/api/v2/spans
+    networks:
+      - searc-network
+    volumes:
+      - ./data/C:/data
+    restart: no
+
 networks:
   searc-network:
     driver: bridge
 
 volumes:
   postgres_data:
-  indexer_postgres_data:  
+  indexer_postgres_data:

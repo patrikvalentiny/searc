@@ -34,7 +34,11 @@ var connectionString = @$"
     Port={Environment.GetEnvironmentVariable("INDEXER_DB_PORT") ?? "5432"};
     Database={Environment.GetEnvironmentVariable("INDEXER_DB_NAME")};
     Username={Environment.GetEnvironmentVariable("INDEXER_DB_USER")};
-    Password={Environment.GetEnvironmentVariable("INDEXER_DB_PASSWORD")}";
+    Password={Environment.GetEnvironmentVariable("INDEXER_DB_PASSWORD")}
+    Max Pool Size=200;
+    Timeout=30;
+    Connection Lifetime=300;
+    Pooling=true";
 builder.Services.AddNpgsqlDataSource(connectionString);
 
 // Register services
@@ -48,10 +52,6 @@ builder.Services.AddHostedService<IndexedFileHandler>();
 using IHost host = builder.Build();
 
 host.Start();
-using (MonitoringService.ActivitySource.StartActivity("IndexerService"))
-{
-    Console.WriteLine("IndexerService is running and waiting for messages...");
-}
 
 // Wait for shutdown signal
 await host.WaitForShutdownAsync();

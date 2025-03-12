@@ -1,34 +1,32 @@
 using System.Diagnostics;
 using EasyNetQ;
-using Microsoft.Extensions.Hosting;
 using Monitoring;
 using OpenTelemetry.Context.Propagation;
+using Searc.SearchApi.Services;
 using Serilog;
 using SharedModels;
 
-namespace Handlers;
-public class CleanedFileHandler(IBus bus) : BackgroundService
+namespace SearchApi.Handlers;
+
+public class IndexedFileDTOHandler(IBus bus, ISearchService service) : BackgroundService
 {
+
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        Log.Debug("Starting CleanedFileHandler");
-        await bus.PubSub.SubscribeAsync<CleanedFileDTO>("CleanedFile", async message =>
+        await bus.PubSub.SubscribeAsync<IndexedFileDTO>("search-api", async message =>
         {
-            Log.Logger.Information("Received message from RabbitMQ");
             var propagator = new TraceContextPropagator();
             var headers = message.PropagationHeaders;
             var context = propagator.Extract(default, headers,  (r, key) => [r.ContainsKey(key) ? r[key].ToString() : string.Empty]).ActivityContext;
-            using var activity = MonitoringService.ActivitySource.StartActivity("CleanerService.CleanedFileHandler", ActivityKind.Consumer, context);
+            using var activity = MonitoringService.ActivitySource.StartActivity("CleanedFileHandler", ActivityKind.Consumer, context);
+            Log.Logger.Information("Received IndexedFileDTO from RabbitMQ");
+            await service.AddIndexFile(message);
             await Task.CompletedTask;
-        }, cancellationToken: stoppingToken).AsTask();
+        });
 
-        Log.Debug("Subscribed to RabbitMQ");
-        
         while (!stoppingToken.IsCancellationRequested)
         {
             await Task.Delay(1000, stoppingToken);
         }
-
-
     }
 }

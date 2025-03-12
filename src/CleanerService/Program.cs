@@ -1,5 +1,4 @@
 using EasyNetQ;
-using Handlers;
 using Infrastructure;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -25,7 +24,6 @@ Console.WriteLine($"Connecting to RabbitMQ at: {rabbitHost}");
 var bus = RabbitHutch.CreateBus($"host={rabbitHost}");
 builder.Services.AddSingleton(bus);
 
-builder.Services.AddHostedService<CleanedFileHandler>();
 builder.Services.AddSingleton<CleanedMessagePublisher>();
 var connectionString = @$"
     Host={Environment.GetEnvironmentVariable("DB_CLEANER_HOST")};
@@ -37,7 +35,7 @@ builder.Services.AddNpgsqlDataSource(connectionString);
 using IHost host = builder.Build();
 
 host.Start();
-using (MonitoringService.ActivitySource.StartActivity("CleanerService"))
+using (MonitoringService.ActivitySource.StartActivity("CleaningFiles"))
 {
     var messagePublisher = host.Services.GetRequiredService<CleanedMessagePublisher>();
     var cleanerService = new CleanerService.Application.Services.CleanerService(messagePublisher);
@@ -45,7 +43,7 @@ using (MonitoringService.ActivitySource.StartActivity("CleanerService"))
     var relativePath = Environment.GetEnvironmentVariable("APP_DATA_PATH") ?? "../../data";
     Console.WriteLine($"Using data path: {relativePath}");
     var cleanedFiles = await cleanerService.CleanFilesAsync(relativePath);
-    await cleanerService.PublishCleanedFilesAsync(cleanedFiles);
+    // await cleanerService.PublishCleanedFilesAsync(cleanedFiles);
 }
 await host.WaitForShutdownAsync();
 Console.WriteLine("Shutting down cleanly...");

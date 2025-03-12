@@ -64,6 +64,8 @@ public static class MonitoringService
         var version = "1.0.0";
 
         _tracerProvider = Sdk.CreateTracerProviderBuilder()
+            .AddAspNetCoreInstrumentation()
+            .AddHttpClientInstrumentation()
             .SetResourceBuilder(
                 ResourceBuilder.CreateDefault()
                     .AddService(serviceName, "search-api", version))
@@ -77,8 +79,8 @@ public static class MonitoringService
 
     public static async Task Dispose()
     {
-         
-        await Log.CloseAndFlushAsync(); 
+
+        await Log.CloseAndFlushAsync();
         _tracerProvider?.Dispose();
     }
     public static void SetupSerilog(string? seqUrl = null)
