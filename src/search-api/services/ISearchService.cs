@@ -6,4 +6,5 @@ public interface ISearchService
 {
     Task<IEnumerable<FileDetailsDTO>> SearchFilesAsync(string query);
     Task AddIndexFile(IndexedFileDTO file);
+    Task<byte[]?> GetFileAsync(int fileId);
 }

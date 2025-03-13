@@ -25,4 +25,10 @@ public class SearchService(ISearchRepository repository) : ISearchService
             await repository.InsertOccurrenceAsync(new Occurrence { WordId = insertedWord.Id, FileId = insertedFileId.Id, Count = word.Value });
         }
     }
+
+    public Task<byte[]?> GetFileAsync(int fileId)
+    {
+        using var activity = MonitoringService.ActivitySource.StartActivity("SearchService.GetFileAsync");
+        return repository.GetFileAsync(fileId);
+    }
 }

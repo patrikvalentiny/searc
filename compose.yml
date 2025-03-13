@@ -270,20 +270,20 @@ services:
       replicas: 3
 
   # Frontend Service
-  # frontend:
-  #   build:
-  #     context: .
-  #     dockerfile: src/frontend/Dockerfile
-  #   container_name: searc-frontend
-  #   environment:
-  #     - VITE_API_BASE_URL=http://searc:6969
-  #   ports:
-  #     - "8000:8000"
-  #   depends_on:
-  #     - searc
-  #   networks:
-  #     - searc-network
-  #   restart: unless-stopped
+  frontend:
+    build:
+      context: .
+      dockerfile: src/frontend/Dockerfile
+    container_name: searc-frontend
+    environment:
+      - VITE_API_BASE_URL=http://searc:6969
+    ports:
+      - "8000:8000"
+    depends_on:
+      - searc
+    networks:
+      - searc-network
+    restart: unless-stopped
 
   cleaner-service-a:
     build:
@@ -353,6 +353,10 @@ services:
     volumes:
       - ./data/C:/data
     restart: no
+
+    ###############################################
+    #Rest of the cleaner services would go here
+    ###############################################
 
 networks:
   searc-network:

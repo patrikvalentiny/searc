@@ -1,4 +1,5 @@
 import { FileDetailsDTO } from "../models/FileDetailsDTO";
+import { GetDownloadRequest } from "../services/DownloadService";
 
 interface FileCardProps {
   result: FileDetailsDTO;
@@ -10,7 +11,7 @@ export const FileCard: React.FC<FileCardProps> = ({ result }) => {
       <div className="card-body">
         <h2 className="card-title">File: {result.filename}</h2>
         <div className="card-actions">
-          <button className="btn btn-ghost" disabled>
+          <button className="btn btn-ghost" onClick={() => GetDownloadRequest(result.id, result.filename)}>
             Download
           </button>
         </div>

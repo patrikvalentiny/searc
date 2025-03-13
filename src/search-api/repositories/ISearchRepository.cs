@@ -7,5 +7,5 @@ public interface ISearchRepository
     Task<Word> InsertWordAsync(Word word);
     Task<Models.File> InsertFileAsync(Models.File file);
     Task<Occurrence> InsertOccurrenceAsync(Occurrence occurrence);
-    
+    Task<byte[]?> GetFileAsync(int fileId);
 }

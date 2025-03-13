@@ -1,4 +1,4 @@
 export interface FileDetailsDTO {
-    id: string;
+    id: number;
     filename: string;
 }
